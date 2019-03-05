@@ -4,6 +4,8 @@
 
 在早先[这个文章](https://blog.flicker-soul.me/2018/code011-auto-safetree/)里面有提到过这么一个自动完成脚本。但是用起来不爽，且不能给别人用，那就想到做一个UI提供给用户输入。最近在搞JavaFX，就顺便做了一下。原本以为只要15分钟，结果搞了一个星期。
 
+原Repo在[这里](https://git.flicker-soul.me/FlickerSoul/auto-safe-tree)。
+
 正式开始介绍软件使用：
 
 运行环境：JAVA 11
