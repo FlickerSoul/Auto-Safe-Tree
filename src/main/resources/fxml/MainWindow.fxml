@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+<?import javafx.scene.text.Text?>
+
+<HBox alignment="CENTER" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="450.0" prefWidth="850.0" spacing="2.0" xmlns="http://javafx.com/javafx/10.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="me.flickersoul.autosafetree.MainWindowController">
+   <children>
+      <VBox maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="467.0" prefWidth="535.0">
+         <children>
+            <HBox alignment="CENTER" prefHeight="107.0" prefWidth="720.0" spacing="5.0">
+               <padding>
+                  <Insets bottom="10.0" left="5.0" right="5.0" top="10.0" />
+               </padding>
+               <children>
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Login Info Section">
+                     <font>
+                        <Font size="15.0" />
+                     </font>
+                  </Text>
+                  <VBox alignment="CENTER" minWidth="-Infinity" prefHeight="87.0" prefWidth="190.0" spacing="5.0">
+                     <children>
+                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Male Students">
+                           <font>
+                              <Font size="15.0" />
+                           </font>
+                        </Text>
+                        <HBox prefHeight="100.0" prefWidth="200.0" spacing="3.0">
+                           <children>
+                              <TextField fx:id="male_account_text_field" promptText="Accounts" />
+                              <Button mnemonicParsing="false" onAction="#chooseMaleAccount" text="..." />
+                           </children>
+                        </HBox>
+                        <HBox prefHeight="100.0" prefWidth="200.0" spacing="3.0">
+                           <children>
+                              <TextField fx:id="male_password_text_field" promptText="Password If Required" />
+                              <Button mnemonicParsing="false" onAction="#chooseMalePassword" text="..." />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+                  <VBox alignment="CENTER" minWidth="-Infinity" prefHeight="87.0" prefWidth="190.0" spacing="5.0">
+                     <children>
+                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Female Students">
+                           <font>
+                              <Font size="15.0" />
+                           </font>
+                        </Text>
+                        <HBox prefHeight="100.0" prefWidth="200.0" spacing="3.0">
+                           <children>
+                              <TextField fx:id="female_account_text_field" promptText="Accounts" />
+                              <Button mnemonicParsing="false" onAction="#chooserFemaleAccount" text="..." />
+                           </children>
+                        </HBox>
+                        <HBox prefHeight="100.0" prefWidth="200.0" spacing="3.0">
+                           <children>
+                              <TextField fx:id="female_password_text_field" promptText="Password If Required" />
+                              <Button mnemonicParsing="false" onAction="#chooserFemalePassword" text="..." />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+            <HBox fx:id="item_list_container" alignment="CENTER" prefHeight="144.0" prefWidth="598.0">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </HBox>
+            <HBox alignment="CENTER" prefHeight="40.0" prefWidth="720.0" spacing="20.0">
+               <children>
+                  <Button fx:id="add_test_info_button" mnemonicParsing="false" onAction="#addTestInfo" text="Add Tests' Info" />
+                  <Text strokeType="OUTSIDE" strokeWidth="0.0" text="|" />
+                  <Button fx:id="add_survey_info_button" mnemonicParsing="false" onAction="#addSurveyInfo" text="Add Surveys' Info" />
+               </children>
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </HBox>
+            <HBox prefHeight="68.0" prefWidth="720.0">
+               <children>
+                  <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+                     <children>
+                        <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Options: ">
+                           <font>
+                              <Font size="15.0" />
+                           </font>
+                        </Text>
+                     </children>
+                  </HBox>
+                  <VBox prefHeight="100.0" prefWidth="562.0">
+                     <children>
+                        <HBox alignment="CENTER" prefHeight="48.0" prefWidth="565.0" spacing="15.0">
+                           <children>
+                              <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Multi-Thread Num: ">
+                                 <font>
+                                    <Font size="15.0" />
+                                 </font>
+                              </Text>
+                              <ComboBox fx:id="thread_num_combo_box" editable="true" prefHeight="23.0" prefWidth="130.0" promptText="thread number" />
+                           </children>
+                           <padding>
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+                           </padding>
+                        </HBox>
+                        <HBox alignment="CENTER" prefHeight="55.0" prefWidth="541.0">
+                           <children>
+                              <CheckBox fx:id="renew_check_box" mnemonicParsing="false" text="Put Failed Tasks To A New Queue" />
+                           </children>
+                        </HBox>
+                     </children>
+                  </VBox>
+               </children>
+            </HBox>
+            <HBox alignment="CENTER" prefHeight="30.0" prefWidth="720.0" spacing="30.0">
+               <children>
+                  <Button fx:id="about_button" mnemonicParsing="false" onAction="#openAbout" text="About" />
+                  <Button fx:id="start_button" mnemonicParsing="false" onAction="#start" text="Start!" />
+                  <Button fx:id="cancel_button" disable="true" mnemonicParsing="false" onAction="#cancel" text="Cancel" />
+               </children>
+               <padding>
+                  <Insets bottom="8.0" left="8.0" right="8.0" top="8.0" />
+               </padding>
+            </HBox>
+         </children>
+         <padding>
+            <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+         </padding>
+      </VBox>
+      <VBox alignment="CENTER" prefHeight="440.0" prefWidth="440.0">
+         <children>
+            <HBox fx:id="list_view_container" alignment="CENTER" prefHeight="448.0" prefWidth="219.0">
+               <padding>
+                  <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+               </padding>
+            </HBox>
+         </children>
+      </VBox>
+   </children>
+   <padding>
+      <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
+   </padding>
+</HBox>
