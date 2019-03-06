@@ -30,6 +30,8 @@ public class MainEntrance extends Application {
         mainWindowController = loader.getController();
         mainWindowController.init();
 
+        primaryStage.setTitle("Auto Safe Tree");
+
         primaryStage.show();
     }
 

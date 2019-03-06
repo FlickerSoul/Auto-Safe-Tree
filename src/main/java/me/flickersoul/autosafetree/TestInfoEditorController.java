@@ -98,17 +98,19 @@ public class TestInfoEditorController {
 
         MainEntrance.logDebug("init HBOXs bindings");
 
-        tag_combo_box.getSelectionModel().select("a");
+        tag_combo_box.getSelectionModel().select("input");
         MainEntrance.logDebug("init Selector");
 
         radio_combo_box.getSelectionModel().select("radio_");
         no_or_abc_1_combo_box.getItems().addAll("No.", "ABC");
         link_combo_box.getSelectionModel().select("_");
         no_or_abc_2_combo_box.getItems().addAll("No.", "ABC");
-        alternative_tag_combo_box.getSelectionModel().select("a");
+        alternative_tag_combo_box.getSelectionModel().select("input");
         param_combo_box.getSelectionModel().select("id");
         no_starts_combo_box.getItems().addAll(0, 1);
         abc_starts_combo_box.getItems().addAll(0, 1);
+
+        alternative_selector_check_box.setDisable(true); //暂时禁用
 
         no_starts_combo_box.setConverter(MainWindowController.converter);
         abc_starts_combo_box.setConverter(MainWindowController.converter);

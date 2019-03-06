@@ -36,7 +36,7 @@
                 <VBox alignment="CENTER" prefHeight="60.0" prefWidth="250.0" spacing="5.0">
                     <children>
                         <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Second Button's XPath" />
-                        <TextField fx:id="second_button_XPath_text_field" text="//a[@id='buzhou2ss']" />
+                        <TextField fx:id="second_button_XPath_text_field" promptText="//*[@id=&quot;buzhou2ss&quot;]" text="//*[@id=&quot;buzhou2ss&quot;]" />
                     </children>
                 </VBox>
             </children>
@@ -147,7 +147,7 @@
                     </font>
                 </Text>
                 <Text strokeType="OUTSIDE" strokeWidth="0.0" text=":" />
-                <TextField fx:id="submit_button_XPath_text_field" prefHeight="23.0" prefWidth="304.0" promptText="//input[contains(text(), '提交')]" text="//input[contains(text(), '提交')]" />
+                <TextField fx:id="submit_button_XPath_text_field" prefHeight="23.0" prefWidth="304.0" promptText="//*[@id=&quot;input_button&quot;]" text="//*[@id=&quot;input_button&quot;]" />
             </children>
             <padding>
                 <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />

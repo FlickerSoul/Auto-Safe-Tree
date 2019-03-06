@@ -258,7 +258,6 @@ public class ProcessingThread implements Callable<Integer> {
                 }
 
                 logInfoWithOwner("Got Test Member: " + testMember);
-                //TODO 增加第一个按钮，如果存在
 
                 try {
                     logDebugWithOwner("Wait JS To Load...");
@@ -278,8 +277,6 @@ public class ProcessingThread implements Callable<Integer> {
                 }
 
                 logInfoWithOwner("Entering Test Section...");
-
-
                 try {
                     HtmlElement stepTwoAnchor = testPage.getFirstByXPath(testMember.getSecondButtonXPath());
                     testPage = stepTwoAnchor.click();
@@ -404,12 +401,12 @@ public class ProcessingThread implements Callable<Integer> {
 
                     if(matcher.group(4).equals("No.")){
                         for (int i = 0; i < answerArray.length; i++) {
-                            int answerRecord = answerArray[i] - 'A' + ABC_RECORD; // starts from 0
+                            int answerRecord = answerArray[i] - 'A' + ABC_RECORD;
                             int noRecord = i + NO_RECORD;
-                            String questionId = new StringBuilder(RADIO).append(noRecord).append(LINK).append(answerRecord).toString(); //TODO 设置两种模式
+                            String questionId = new StringBuilder(RADIO).append(noRecord).append(LINK).append(answerRecord).toString();
 
                             try {
-                                sleep(CLICK_INTERVAL); //TODO sleep interval填入
+                                sleep(CLICK_INTERVAL);
                                 surveyTestPage = surveyTestPage.getHtmlElementById(questionId).click();
                             } catch (Exception e) {
                                 logErrorWithOwner("Cannot find the element with the id: " + questionId + "! Trying Turning To Next Page");
@@ -434,12 +431,12 @@ public class ProcessingThread implements Callable<Integer> {
                         }
                     } else {
                         for (int i = 0; i < answerArray.length; i++) {
-                            int answerRecord = answerArray[i] - 'A' + ABC_RECORD; // starts from 0
+                            int answerRecord = answerArray[i] - 'A' + ABC_RECORD;
                             int noRecord = i + NO_RECORD;
-                            String questionId = new StringBuilder(RADIO).append(answerRecord).append(LINK).append(noRecord).toString(); //TODO 设置两种模式
+                            String questionId = new StringBuilder(RADIO).append(answerRecord).append(LINK).append(noRecord).toString();
 
                             try {
-                                sleep(CLICK_INTERVAL); //TODO sleep interval填入
+                                sleep(CLICK_INTERVAL);
                                 surveyTestPage = surveyTestPage.getHtmlElementById(questionId).click();
                             } catch (Exception e) {
                                 logErrorWithOwner("Cannot find the element with the id: " + questionId + "! Trying Turning To Next Page");
@@ -466,7 +463,7 @@ public class ProcessingThread implements Callable<Integer> {
                     logFatalWithOwner("The XPath For Question Answers Is Incorrect; Exiting With Error Code: " + INCORRECT_XPATH);
                 }
 
-                HtmlElement input = surveyTestPage.getFirstByXPath(member.getSubmitButtonXPath()); //TODO 填入submit xpath
+                HtmlElement input = surveyTestPage.getFirstByXPath(member.getSubmitButtonXPath());
 
                 try {
                     surveyTestPage = input.click();

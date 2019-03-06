@@ -16,9 +16,11 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
+import net.sourceforge.htmlunit.corejs.javascript.tools.shell.Main;
 import org.apache.log4j.Level;
 
 import java.awt.*;
+import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -217,6 +219,29 @@ public class MainWindowController {
     public void cancel(){
         ThreadBootstrapper.terminateAllThread();
         workingProperty.set(false);
+    }
+
+    @FXML
+    public void report(){
+        MainEntrance.logInfo("Opening Log File Folder; Composing Report Email...");
+
+        try {
+            URI mailContent = new URI(("mailto:i@flicker-soul.me?subject=Bug%20Report&body=%0D%0A%0D%0A%0D%0A" + "Please Detail The Problems AND Attach Log Files (Which Have Been Opened In Your System's File Explore) Here. Thank you! %0D%0A(请详细说明问题，并且请附上Log文件，文件夹已为您打开. 谢谢!）" + "%0D%0A%0D%0A" + "Application Version: " + System.getProperty("app.version") + "%0D%0AJava Version: " + System.getProperty("java.version") + "%0D%0ASystem Os Version: "  + System.getProperty("os.name") + "%0D%0ASystem Arch: " + System.getProperty("os.arch") + "%0D%0ASystem Version: " + System.getProperty("os.version")).replaceAll(" ", "%20"));
+            Desktop.getDesktop().mail(mailContent);
+            MainEntrance.logDebug("Mail Content:" + mailContent);
+
+        } catch (Exception e){
+            MainEntrance.logError("Cannot Open Mail Service\n" + e.getMessage());
+        }
+
+        try {
+            Desktop.getDesktop().open(new File(System.getProperty("logfile.root")));
+            MainEntrance.logDebug("Opened Log File Folder");
+        } catch (IOException e) {
+            MainEntrance.logError("Cannot Open Log File Folder; Please Open It Manually! \n" + e.getMessage());
+        }
+
+        MainEntrance.logInfo("Report Material Prepared.");
     }
 
     private boolean checkIntegrity(){
