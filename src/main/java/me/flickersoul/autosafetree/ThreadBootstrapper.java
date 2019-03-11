@@ -169,8 +169,6 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
 
 
         try {
-            MainEntrance.logDebug("Got All Results");
-
             for(Iterator<Map.Entry<Future<Integer>, ProcessingThread>> resultIterator = threadResultMap.entrySet().iterator(); resultIterator.hasNext(); ) {
                 Map.Entry<Future<Integer>, ProcessingThread> item = resultIterator.next();
 

@@ -232,7 +232,7 @@ public class ProcessingThread implements Callable<Integer> {
             return DONE;
         }
 
-        logInfoWithOwner("You Have " + (testSize + surveySize) + " Task(s) Remaining Incomplete! Test(s): " + testSize + "survey(s): " + surveySize);
+        logInfoWithOwner("You Have " + (testSize + surveySize) + " Task(s) Remaining Incomplete! Test(s): " + testSize + "; Survey(s): " + surveySize);
 
         logInfoWithOwner("Start Finishing Tests...");
         if(testAnchors.size() != 0) {
