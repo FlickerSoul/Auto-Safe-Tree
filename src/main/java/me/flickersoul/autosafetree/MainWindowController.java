@@ -121,7 +121,6 @@ public class MainWindowController {
         renew_check_box.setSelected(true);
 
         stage.initModality(Modality.APPLICATION_MODAL);
-        stage.initOwner(male_account_text_field.getScene().getWindow());
 
         workingProperty.addListener((observable, oldValue, newValue) -> {
             if(newValue){
@@ -245,7 +244,7 @@ public class MainWindowController {
     }
 
     private boolean checkIntegrity(){
-        if(male_account_text_field.getText().equals("") || female_account_text_field.getText().equals("")){
+        if(male_account_text_field.getText().isBlank() || female_account_text_field.getText().isBlank()){
             AlertBox.displayError("Error", "Input Error: Account Info File(s) Is(Are) Empty", "You have to input the path of account files, either by entering manually or click the button on the right to select.");
             return false;
         }

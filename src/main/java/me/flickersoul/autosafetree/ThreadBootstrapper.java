@@ -1,6 +1,8 @@
 package me.flickersoul.autosafetree;
 
 import java.io.*;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -18,11 +20,38 @@ public class ThreadBootstrapper{
         if(closeFuture != null && (closeFuture.isDone() || closeFuture.isCancelled()))
             closeFuture.cancel(true);
 
-        File maleStudentsAccounts = new File(maleAccount);
-        File femaleStudentsAccounts = new File(femaleAccount);
+        File maleStudentsAccounts = null;
+        File malePasswords = null;
+        File femalePasswords = null;
+        File femaleStudentsAccounts = null;
+        try {
+            URI maleURL = new URI(maleAccount);
+            maleStudentsAccounts = new File(maleURL);
+        } catch (URISyntaxException e) {
+            MainEntrance.logWarning("The Male Account Input Is Not A File");
+        }
 
-        File malePasswords = new File(malePassword);
-        File femalePasswords = new File(femalePassword);
+        try{
+            URI femaleURI = new URI(femaleAccount);
+            femaleStudentsAccounts = new File(femaleURI);
+        } catch (URISyntaxException e) {
+            MainEntrance.logWarning("The Female Account Input Is Not A File");
+        }
+
+        try{
+            URI malePasswordURI = new URI(malePassword);
+            malePasswords = new File(malePasswordURI);
+        } catch (URISyntaxException e) {
+            MainEntrance.logWarning("The Male Password Input Is Not A File");
+        }
+
+        try{
+            URI femalePasswordURI = new URI(femalePassword);
+            femalePasswords = new File(femalePasswordURI);
+
+        } catch (URISyntaxException e) {
+            MainEntrance.logWarning("The Female Password Input Is Not A File");
+        }
 
         threadCount = threadNum / 2;
         MainEntrance.logDebug("Single Pool Thread Count: " + threadCount);
@@ -95,7 +124,9 @@ class CloseListener implements Callable<Boolean> {
 
 class ThreadBootstrapperTemplate implements Callable<Boolean>{
     private File accountFile;
+    private String accountString;
     private File passwordFile;
+    private String passwordString;
     private final boolean isMale;
     private final boolean renewFailedThreads;
     private final ExecutorService pool = Executors.newFixedThreadPool(ThreadBootstrapper.getThreadCount(), runnable -> new Thread(runnable, "Processing Thread"));
@@ -113,36 +144,84 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
         this.renewFailedThreads = renewFailedThreads;
     }
 
+    public ThreadBootstrapperTemplate(File accountFile, String accountString, File passwordFile, String passwordString, boolean isMale, boolean renewFailedThreads) {
+        this.accountFile = accountFile;
+        this.accountString = accountString;
+        this.passwordFile = passwordFile;
+        this.passwordString = passwordString;
+        this.isMale = isMale;
+        this.renewFailedThreads = renewFailedThreads;
+    }
+
     @Override
     public Boolean call() {
         Map<Future<Integer>, ProcessingThread> threadResultMap = new HashMap<>();
         ArrayList<String> accountList = new ArrayList<>();
-        ArrayList<String> passwordList = null;
+        ArrayList<String> passwordList = new ArrayList<>();
         String universalPassword = ThreadBootstrapper.initPassword;
 
-
-        try(BufferedReader accountsReader = new BufferedReader(new FileReader(accountFile))){
-            for(String account; (account = accountsReader.readLine()) != null; ){
-                accountList.add(account);
+        if(accountFile == null){
+            for (String subAccount : accountString.split(" ")) {
+                accountList.add(subAccount);
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+        } else {
+            try (BufferedReader accountsReader = new BufferedReader(new FileReader(accountFile))) {
+                for (String account; (account = accountsReader.readLine()) != null; ) {
+                    accountList.add(account);
+                }
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
 
-        if(passwordFile.canRead()) {
-            try (BufferedReader passwordReader = new BufferedReader(new FileReader(passwordFile))) {
-                final int linesInPasswordFile = countLine(passwordFile);
+        int linesInAccountFile = accountList.size();
 
-                if (linesInPasswordFile == 1) {
-                    universalPassword = passwordReader.readLine();
-                } else if (linesInPasswordFile > 1) {
-                    passwordList = new ArrayList<>();
-                    for (String password; (password = passwordReader.readLine()) != null; ) {
-                        passwordList.add(password);
+        if(linesInAccountFile == 0){
+            MainEntrance.logFatal("The Account Info Is Null; Please Recheck The File Before Going On");
+            MainEntrance.logFatal("Exiting This Thread: " + this.toString());
+            return false;
+        }
+
+        if(passwordFile == null) {
+            String[] passwordArray =  passwordString.split(" ");
+            if (passwordArray.length == 1){
+                passwordList = null;
+                universalPassword = passwordArray[0];
+            } else {
+                for (String subPassword : passwordArray) {
+                    passwordList.add(subPassword);
+                }
+
+                int linesInPasswordFile = passwordList.size();
+
+                if (linesInAccountFile > linesInPasswordFile) {
+                    String lastPassword = passwordList.get(passwordList.size() - 1);
+
+                    for (int i = 0; i < linesInAccountFile - linesInPasswordFile; i++) {
+                        passwordList.add(lastPassword);
                     }
                 }
+            }
+        } else {
+            try (BufferedReader passwordReader = new BufferedReader(new FileReader(passwordFile))) {
+                for (String password; (password = passwordReader.readLine()) != null; ) {
+                    passwordList.add(password);
+                }
+
+                int linesInPasswordFile = passwordList.size();
+
+                if (linesInPasswordFile == 1) {
+                    passwordList = null;
+                    universalPassword = passwordReader.readLine();
+                } else if (linesInPasswordFile > 1 && linesInAccountFile > linesInPasswordFile) {
+                    String lastPassword = passwordList.get(passwordList.size() - 1);
+                    for (int i = 0; i < linesInAccountFile - linesInPasswordFile; i++) {
+                        passwordList.add(lastPassword);
+                    }
+                }
+
             } catch (FileNotFoundException e) {
                 e.printStackTrace();
             } catch (IOException e) {
@@ -238,31 +317,6 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
         MainEntrance.logDebug("Performed Garbage Collect");
 
         return true;
-    }
-
-    private int countLine(File file){
-        int count = 0;
-        boolean empty = true;
-
-        try(InputStream is = new BufferedInputStream(new FileInputStream(file))) {
-            byte[] c = new byte[1024];
-            int readChars = 0;
-            while ((readChars = is.read(c)) != -1) {
-                empty = false;
-                for (int i = 0; i < readChars; ++i) {
-                    if (c[i] == '\n') {
-                        ++count;
-                    }
-                }
-            }
-            return (count == 0 && !empty) ? 1 : count;
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-        return -1;
     }
 
     public ExecutorService getPool(){

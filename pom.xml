@@ -6,7 +6,7 @@
 
     <groupId>me.flicker-soul.safetree</groupId>
     <artifactId>SafeTreeProject</artifactId>
-    <version>0.9.4.4-beta</version>
+    <version>0.9.4.5-beta</version>
     <build>
         <plugins>
             <plugin>
