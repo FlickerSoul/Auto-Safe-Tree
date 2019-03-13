@@ -120,12 +120,6 @@ public class MainWindowController {
 
         renew_check_box.setSelected(true);
 
-        stage.setOnCloseRequest(event -> {
-            if(workingProperty.get()) {
-                event.consume();
-                AlertBox.displayError("Action Error", "There Are Tasks Running In The BackGround", "You Cannot Close This Application Until All The Works You Submited Are Finished; You Can Click On 'Close' Button To Cancel All Tasks");
-            }
-        });
         stage.initModality(Modality.APPLICATION_MODAL);
 
         workingProperty.addListener((observable, oldValue, newValue) -> {
@@ -212,7 +206,7 @@ public class MainWindowController {
     public void start(){
         if(checkIntegrity()) {
             workingProperty.set(true);
-            ThreadBootstrapper.init(male_account_text_field.getText(), male_password_text_field.getText(), female_account_text_field.getText(), female_password_text_field.getText(), thread_num_combo_box.getSelectionModel().getSelectedItem(), renew_check_box.isSelected());
+            ThreadBootstrapper.init(male_account_text_field.getText().trim(), male_password_text_field.getText().trim(), female_account_text_field.getText().trim(), female_password_text_field.getText().trim(), thread_num_combo_box.getSelectionModel().getSelectedItem(), renew_check_box.isSelected());
         }
     }
 

@@ -188,7 +188,11 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
         }
 
         if(passwordFile == null) {
-            passwordList.addAll(Arrays.asList(passwordString.split(" ")));
+            if(passwordString.isBlank()){
+                MainEntrance.logDebug("The Password String Is Blank; Setting Password List To Null");
+                passwordList = null;
+            } else
+                passwordList.addAll(Arrays.asList(passwordString.split(" ")));
         } else {
             try (BufferedReader passwordReader = new BufferedReader(new FileReader(passwordFile))) {
                 for (String password; (password = passwordReader.readLine()) != null; ) {
@@ -209,12 +213,12 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
 
         }
 
-        int linesInPasswordFile = passwordList.size();
+        int linesInPasswordFile = 0;
+        if(passwordList != null){
+            linesInPasswordFile = passwordList.size();
+        }
 
-        if(linesInPasswordFile == 0){
-            MainEntrance.logDebug("The Password String Is Blank; Setting Password List To Null");
-            passwordList = null;
-        } else if (linesInPasswordFile == 1) {
+        if (linesInPasswordFile == 1) {
             MainEntrance.logDebug("Only One Password Is In The List; Setting Password List To Null And Changing Universal Password");
             universalPassword = passwordList.get(0);
             passwordList = null;

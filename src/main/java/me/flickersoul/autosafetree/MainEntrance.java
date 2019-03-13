@@ -32,6 +32,13 @@ public class MainEntrance extends Application {
 
         primaryStage.setTitle("Auto Safe Tree");
 
+        primaryStage.setOnCloseRequest(event -> {
+            if(MainWindowController.getWorkingProperty().get()) {
+                event.consume();
+                AlertBox.displayError("Action Error", "There Are Tasks Running In The BackGround", "You Cannot Close This Application Until All The Works You Submited Are Finished; You Can Click On 'Close' Button To Cancel All Tasks");
+            }
+        });
+
         primaryStage.show();
     }
 
