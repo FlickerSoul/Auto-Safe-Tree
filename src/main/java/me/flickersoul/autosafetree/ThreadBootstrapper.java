@@ -1,8 +1,6 @@
 package me.flickersoul.autosafetree;
 
 import java.io.*;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.*;
 import java.util.concurrent.*;
 
@@ -20,50 +18,57 @@ public class ThreadBootstrapper{
         if(closeFuture != null && (closeFuture.isDone() || closeFuture.isCancelled()))
             closeFuture.cancel(true);
 
-        File maleStudentsAccounts = null;
+        MainEntrance.logDebug("Male Account String: " + maleAccount + "; Male Password String: " + malePassword + "; Female Account String: " + femaleAccount + "; Female Password String: " + femalePassword + "; Thread Number: " + threadNum + "; Renew?: " + renewFailedThreads);
+
+        File maleStudentsAccounts;
         File malePasswords = null;
         File femalePasswords = null;
-        File femaleStudentsAccounts = null;
-        try {
-            URI maleURL = new URI(maleAccount);
-            maleStudentsAccounts = new File(maleURL);
-        } catch (URISyntaxException e) {
+        File femaleStudentsAccounts;
+
+
+        maleStudentsAccounts = new File(maleAccount);
+        if(!maleStudentsAccounts.canRead()){
             MainEntrance.logWarning("The Male Account Input Is Not A File");
+            maleStudentsAccounts = null;
         }
 
-        try{
-            URI femaleURI = new URI(femaleAccount);
-            femaleStudentsAccounts = new File(femaleURI);
-        } catch (URISyntaxException e) {
+        femaleStudentsAccounts = new File(femaleAccount);
+        if(!femaleStudentsAccounts.canRead()){
             MainEntrance.logWarning("The Female Account Input Is Not A File");
+            femaleStudentsAccounts = null;
         }
 
-        try{
-            URI malePasswordURI = new URI(malePassword);
-            malePasswords = new File(malePasswordURI);
-        } catch (URISyntaxException e) {
-            MainEntrance.logWarning("The Male Password Input Is Not A File");
+        if(malePassword.isBlank()){
+            MainEntrance.logWarning("The Male Password Input Is Empty");
+        } else {
+            malePasswords = new File(malePassword);
+            if(!malePasswords.canRead()){
+                MainEntrance.logWarning("The Male Password Input Is Not A File");
+                malePasswords = null;
+            }
         }
 
-        try{
-            URI femalePasswordURI = new URI(femalePassword);
-            femalePasswords = new File(femalePasswordURI);
-
-        } catch (URISyntaxException e) {
-            MainEntrance.logWarning("The Female Password Input Is Not A File");
+        if(femalePassword.isBlank()){
+            MainEntrance.logWarning("The Female Password Input Is Empty");
+        } else {
+            femalePasswords = new File(femalePassword);
+            if(!femalePasswords.canRead()){
+                MainEntrance.logWarning("The Female Password Input Is Not A File");
+                femalePasswords = null;
+            }
         }
 
         threadCount = threadNum / 2;
         MainEntrance.logDebug("Single Pool Thread Count: " + threadCount);
 
-        ThreadBootstrapperTemplate maleTemplate = new ThreadBootstrapperForMaleStudents(maleStudentsAccounts, malePasswords, renewFailedThreads);
+        ThreadBootstrapperTemplate maleTemplate = new ThreadBootstrapperForMaleStudents(maleStudentsAccounts, maleAccount, malePasswords, malePassword, renewFailedThreads);
 
         Future<Boolean> maleFuture = bootstrapperThreadsPool.submit(maleTemplate);
 
         templateThreadList.put(maleTemplate.getPool(), maleFuture);
         MainEntrance.logDebug("Start Male Students' Processing Thread");
 
-        ThreadBootstrapperTemplate femaleTemplate = new ThreadBootstrapperForFemaleStudents(femaleStudentsAccounts, femalePasswords, renewFailedThreads);
+        ThreadBootstrapperTemplate femaleTemplate = new ThreadBootstrapperForFemaleStudents(femaleStudentsAccounts, femaleAccount, femalePasswords, femalePassword, renewFailedThreads);
         Future<Boolean> femaleFuture = bootstrapperThreadsPool.submit(femaleTemplate);
 
         templateThreadList.put(femaleTemplate.getPool(), femaleFuture);
@@ -88,11 +93,16 @@ public class ThreadBootstrapper{
     public static void getAllFuture(){
         for(Future<Boolean> future : templateThreadList.values()){
             try {
-                future.get();
+                boolean result = future.get();
+                if(result){
+                    MainEntrance.logInfo("Finished One Template Without Errors");
+                } else {
+                    MainEntrance.logError("Something Wrong During Working On This Template; Please Click On Report Button To Send A Message To The Maintainer");
+                }
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                MainEntrance.logError(e);
             } catch (ExecutionException e) {
-                e.printStackTrace();
+                MainEntrance.logError(e);
             }
         }
 
@@ -111,7 +121,6 @@ public class ThreadBootstrapper{
 }
 
 class CloseListener implements Callable<Boolean> {
-
     @Override
     public Boolean call() {
         ThreadBootstrapper.getAllFuture();
@@ -138,12 +147,6 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
         this.renewFailedThreads = renewFailedThreads;
     }
 
-    public ThreadBootstrapperTemplate(File accountFile, boolean isMale, boolean renewFailedThreads) {
-        this.accountFile = accountFile;
-        this.isMale = isMale;
-        this.renewFailedThreads = renewFailedThreads;
-    }
-
     public ThreadBootstrapperTemplate(File accountFile, String accountString, File passwordFile, String passwordString, boolean isMale, boolean renewFailedThreads) {
         this.accountFile = accountFile;
         this.accountString = accountString;
@@ -151,6 +154,8 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
         this.passwordString = passwordString;
         this.isMale = isMale;
         this.renewFailedThreads = renewFailedThreads;
+
+        MainEntrance.logDebug("Male: " + isMale + "; Account File: " + accountFile + "; Password File: " + passwordFile + "; Account String: " + accountString + "; Password String: " + passwordString);
     }
 
     @Override
@@ -161,81 +166,74 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
         String universalPassword = ThreadBootstrapper.initPassword;
 
         if(accountFile == null){
-            for (String subAccount : accountString.split(" ")) {
-                accountList.add(subAccount);
-            }
+            accountList.addAll(Arrays.asList(accountString.split(" ")));
         } else {
             try (BufferedReader accountsReader = new BufferedReader(new FileReader(accountFile))) {
                 for (String account; (account = accountsReader.readLine()) != null; ) {
                     accountList.add(account);
                 }
             } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                MainEntrance.logError(e);
             } catch (IOException e) {
-                e.printStackTrace();
+                MainEntrance.logError(e);
             }
         }
 
         int linesInAccountFile = accountList.size();
 
         if(linesInAccountFile == 0){
-            MainEntrance.logFatal("The Account Info Is Null; Please Recheck The File Before Going On");
+            MainEntrance.logFatal("The Account Info Is Null; Please Recheck Your Input Before Going On");
             MainEntrance.logFatal("Exiting This Thread: " + this.toString());
             return false;
         }
 
         if(passwordFile == null) {
-            String[] passwordArray =  passwordString.split(" ");
-            if (passwordArray.length == 1){
-                passwordList = null;
-                universalPassword = passwordArray[0];
-            } else {
-                for (String subPassword : passwordArray) {
-                    passwordList.add(subPassword);
-                }
-
-                int linesInPasswordFile = passwordList.size();
-
-                if (linesInAccountFile > linesInPasswordFile) {
-                    String lastPassword = passwordList.get(passwordList.size() - 1);
-
-                    for (int i = 0; i < linesInAccountFile - linesInPasswordFile; i++) {
-                        passwordList.add(lastPassword);
-                    }
-                }
-            }
+            passwordList.addAll(Arrays.asList(passwordString.split(" ")));
         } else {
             try (BufferedReader passwordReader = new BufferedReader(new FileReader(passwordFile))) {
                 for (String password; (password = passwordReader.readLine()) != null; ) {
                     passwordList.add(password);
                 }
 
-                int linesInPasswordFile = passwordList.size();
-
-                if (linesInPasswordFile == 1) {
-                    passwordList = null;
-                    universalPassword = passwordReader.readLine();
-                } else if (linesInPasswordFile > 1 && linesInAccountFile > linesInPasswordFile) {
-                    String lastPassword = passwordList.get(passwordList.size() - 1);
-                    for (int i = 0; i < linesInAccountFile - linesInPasswordFile; i++) {
-                        passwordList.add(lastPassword);
-                    }
+                if(passwordList.size() == 0){
+                    MainEntrance.logFatal("The Password Info Is Null; Please Recheck Your Input Before Going On");
+                    MainEntrance.logFatal("Exiting This Thread: " + this.toString());
+                    return false;
                 }
-
             } catch (FileNotFoundException e) {
-                e.printStackTrace();
+                MainEntrance.logError(e);
             } catch (IOException e) {
-                e.printStackTrace();
+                MainEntrance.logError(e);
+            }
+
+
+        }
+
+        int linesInPasswordFile = passwordList.size();
+
+        if(linesInPasswordFile == 0){
+            MainEntrance.logDebug("The Password String Is Blank; Setting Password List To Null");
+            passwordList = null;
+        } else if (linesInPasswordFile == 1) {
+            MainEntrance.logDebug("Only One Password Is In The List; Setting Password List To Null And Changing Universal Password");
+            universalPassword = passwordList.get(0);
+            passwordList = null;
+        } else if (linesInPasswordFile > 1 && linesInAccountFile > linesInPasswordFile) {
+            String lastPassword = passwordList.get(passwordList.size() - 1);
+            for (int i = 0; i < linesInAccountFile - linesInPasswordFile; i++) {
+                passwordList.add(lastPassword);
             }
         }
 
-        if(passwordList == null || passwordList.size() != accountList.size()){
+        if(passwordList == null){
+            MainEntrance.logDebug("Password List Is Null; Using Universal Password");
             for(String account : accountList){
                 ProcessingThread thread = new ProcessingThread(account, universalPassword, isMale);
                 threadResultMap.put(pool.submit(thread), thread);
                 MainEntrance.logDebug("Add Thread: " + thread);
             }
         } else {
+            MainEntrance.logDebug("Password List Is Not Null; Using Passwords Inside Of The List");
             for (int i = 0; i < passwordList.size(); i++) {
                 ProcessingThread thread = new ProcessingThread(accountList.get(i), passwordList.get(i), isMale);
                 threadResultMap.put(pool.submit(thread), thread);
@@ -267,7 +265,7 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
         } catch (InterruptedException e) {
             MainEntrance.logWarning("The Batch Executions Are Interrupted");
         } catch (ExecutionException e) {
-            e.printStackTrace();
+            MainEntrance.logError(e);
         }
 
         MainEntrance.logInfo("Failed Task(s): " + threadResultMap.size());
@@ -296,7 +294,7 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
                 } catch (InterruptedException e) {
                     MainEntrance.logWarning("The Batch Executions Are Interrupted");
                 } catch (ExecutionException e) {
-                    e.printStackTrace();
+                    MainEntrance.logError(e);
                 }
             }
         }
@@ -325,14 +323,14 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
 }
 
 class ThreadBootstrapperForMaleStudents extends ThreadBootstrapperTemplate {
-    public ThreadBootstrapperForMaleStudents(File accountFile, File passwordFile, boolean renewable) {
-        super(accountFile, passwordFile, true, renewable);
+    public ThreadBootstrapperForMaleStudents(File accountFile, String accountString, File passwordFile, String passwordString, boolean renewable) {
+        super(accountFile, accountString, passwordFile, passwordString, true, renewable);
     }
 }
 
 class ThreadBootstrapperForFemaleStudents extends ThreadBootstrapperTemplate {
 
-    public ThreadBootstrapperForFemaleStudents(File accountFile, File passwordFile, boolean renewable) {
-        super(accountFile, passwordFile, false, renewable);
+    public ThreadBootstrapperForFemaleStudents(File accountFile, String accountString, File passwordFile, String passwordString, boolean renewable) {
+        super(accountFile, accountString, passwordFile, passwordString, false, renewable);
     }
 }

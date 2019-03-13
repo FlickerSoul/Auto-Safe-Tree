@@ -120,6 +120,12 @@ public class MainWindowController {
 
         renew_check_box.setSelected(true);
 
+        stage.setOnCloseRequest(event -> {
+            if(workingProperty.get()) {
+                event.consume();
+                AlertBox.displayError("Action Error", "There Are Tasks Running In The BackGround", "You Cannot Close This Application Until All The Works You Submited Are Finished; You Can Click On 'Close' Button To Cancel All Tasks");
+            }
+        });
         stage.initModality(Modality.APPLICATION_MODAL);
 
         workingProperty.addListener((observable, oldValue, newValue) -> {
@@ -167,7 +173,7 @@ public class MainWindowController {
 
             stage.showAndWait();
         } catch (IOException e) {
-            e.printStackTrace();
+            MainEntrance.logError(e);
         }
     }
 
@@ -187,7 +193,7 @@ public class MainWindowController {
 
             stage.showAndWait();
         } catch (IOException e) {
-            e.printStackTrace();
+            MainEntrance.logError(e);
         }
     }
 
@@ -383,7 +389,7 @@ class ItemListView extends ListView<ItemTemplate> {
 
                                     stage.showAndWait();
                                 } catch (IOException e) {
-                                    e.printStackTrace();
+                                    MainEntrance.logError(e);
                                 }
                             } else if(item instanceof SurveyItemTemplate) {
                                 SurveyItemTemplate temp = (SurveyItemTemplate) item;
@@ -398,7 +404,7 @@ class ItemListView extends ListView<ItemTemplate> {
 
                                     stage.showAndWait();
                                 } catch (IOException e) {
-                                    e.printStackTrace();
+                                    MainEntrance.logError(e);
                                 }
                             }
                         }

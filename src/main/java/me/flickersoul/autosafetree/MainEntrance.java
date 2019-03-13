@@ -35,23 +35,23 @@ public class MainEntrance extends Application {
         primaryStage.show();
     }
 
-    public static void logDebug(String message){
+    public static void logDebug(Object message){
         logger.debug(message);
     }
 
-    public static void logInfo(String message){
+    public static void logInfo(Object message){
         logger.info(message);
     }
 
-    public static void logWarning(String message){
+    public static void logWarning(Object message){
         logger.warn(message);
     }
 
-    public static void logError(String message){
+    public static void logError(Object message){
         logger.error(message);
     }
 
-    public static void logFatal(String message){
+    public static void logFatal(Object message){
         logger.fatal(message);
     }
 

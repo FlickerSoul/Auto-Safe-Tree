@@ -23,7 +23,7 @@ public class FileChooserDriver {
         if(file == null)
             return "";
 
-        return file.toURI().toString();
+        return file.getPath();
     }
 
     public static File getFile(){

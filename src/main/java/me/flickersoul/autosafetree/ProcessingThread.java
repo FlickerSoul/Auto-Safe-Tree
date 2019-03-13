@@ -122,7 +122,7 @@ public class ProcessingThread implements Callable<Integer> {
         try {
             rawPage = webClient.getPage(HOME_PAGE);
         } catch (IOException e) {
-            e.printStackTrace();
+            MainEntrance.logError(e);
         }
         logInfoWithOwner("Got Home Page");
 
@@ -263,7 +263,7 @@ public class ProcessingThread implements Callable<Integer> {
                     logDebugWithOwner("Wait JS To Load...");
                     sleep(500);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    MainEntrance.logError(e);
                 }
 
                 if (!testMember.getFirstButtonXPath().isBlank()) {
@@ -346,7 +346,7 @@ public class ProcessingThread implements Callable<Integer> {
                     logInfoWithOwner("Waiting JS"); //??????
                     sleep(500);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    MainEntrance.logError(e);
                 }
 
                 //点击第一个观看完成框
@@ -468,14 +468,14 @@ public class ProcessingThread implements Callable<Integer> {
                 try {
                     surveyTestPage = input.click();
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    MainEntrance.logError(e);
                 }
                 logInfoWithOwner("click on submit " + input);
 
                 try {
                     sleep(500);
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    MainEntrance.logError(e);
                 }
                 logInfoWithOwner("Complete: " + surveyTestPage);
             }
@@ -498,9 +498,9 @@ public class ProcessingThread implements Callable<Integer> {
                 return INCOMPLETE_ERROR;
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            MainEntrance.logError(e);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            MainEntrance.logError(e);
         }
 
 
