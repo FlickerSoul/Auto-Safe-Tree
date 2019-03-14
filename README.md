@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/FlickerSoul/Auto-Safe-Tree.svg?branch=master)](https://travis-ci.org/FlickerSoul/Auto-Safe-Tree)
+[![Build Status](https://travis-ci.org/FlickerSoul/Auto-Safe-Tree.svg?branch=master)](https://travis-ci.org/FlickerSoul/Auto-Safe-Tree) ![Environment](https://img.shields.io/badge/JAVA-11-blue.svg)
 
 # Auto-Safe-Tree
 
