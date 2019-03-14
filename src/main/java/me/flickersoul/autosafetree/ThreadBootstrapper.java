@@ -10,7 +10,6 @@ public class ThreadBootstrapper{
     private static Future<Boolean> closeFuture;
 
     private static int threadCount;
-    public static final String initPassword = "123456";
     private static final HashMap<ExecutorService, Future<Boolean>> templateThreadList = new HashMap<>();
 
     public synchronized static void init(String maleAccount, String malePassword, String femaleAccount, String femalePassword, int threadNum, boolean renewFailedThreads){
@@ -139,6 +138,7 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
     private final boolean isMale;
     private final boolean renewFailedThreads;
     private final ExecutorService pool = Executors.newFixedThreadPool(ThreadBootstrapper.getThreadCount(), runnable -> new Thread(runnable, "Processing Thread"));
+    public static final String initPassword = "123456";
 
     public ThreadBootstrapperTemplate(File accountFile, File passwordFile, boolean isMale, boolean renewFailedThreads) {
         this.accountFile = accountFile;
@@ -163,13 +163,15 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
         Map<Future<Integer>, ProcessingThread> threadResultMap = new HashMap<>();
         ArrayList<String> accountList = new ArrayList<>();
         ArrayList<String> passwordList = new ArrayList<>();
-        String universalPassword = ThreadBootstrapper.initPassword;
+        String universalPassword = initPassword;
 
         if(accountFile == null){
             accountList.addAll(Arrays.asList(accountString.split(" ")));
         } else {
             try (BufferedReader accountsReader = new BufferedReader(new FileReader(accountFile))) {
                 for (String account; (account = accountsReader.readLine()) != null; ) {
+                    if(account.isBlank())
+                        continue;
                     accountList.add(account);
                 }
             } catch (FileNotFoundException e) {
@@ -196,6 +198,8 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
         } else {
             try (BufferedReader passwordReader = new BufferedReader(new FileReader(passwordFile))) {
                 for (String password; (password = passwordReader.readLine()) != null; ) {
+                    if(password.isBlank())
+                        passwordList.add(initPassword);
                     passwordList.add(password);
                 }
 
