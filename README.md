@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/FlickerSoul/Auto-Safe-Tree.svg?branch=master)](https://travis-ci.org/FlickerSoul/Auto-Safe-Tree)
+
 # Auto-Safe-Tree
 
 好了抽一(ji)个小时出来写这个。
