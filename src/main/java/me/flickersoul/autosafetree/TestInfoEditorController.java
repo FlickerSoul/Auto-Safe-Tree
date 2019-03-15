@@ -164,7 +164,7 @@ public class TestInfoEditorController {
 
         submit_button.setOnMouseClicked(event -> {
             if(checkIntegrity()) {
-                member.updateInfo(page_url_text_field.getText(), first_button_XPath_text_field.getText(), second_button_XPath_text_field.getText(), getSelectorXPath(), open_new_page_XPath_text_field.getText(), click_interval_text_field.getText(), submit_button_XPath_text_field.getText());
+                member.updateInfo(page_url_text_field.getText().trim(), first_button_XPath_text_field.getText().trim(), second_button_XPath_text_field.getText().trim(), getSelectorXPath(), open_new_page_XPath_text_field.getText().trim(), click_interval_text_field.getText().trim(), submit_button_XPath_text_field.getText().trim());
                 MainEntrance.logInfo("Update Info Successfully!");
             }
         });
@@ -175,14 +175,14 @@ public class TestInfoEditorController {
     @FXML
     public void submit(){
         if(checkIntegrity()) {
-            String url = page_url_text_field.getText();
+            String url = page_url_text_field.getText().trim();
 
             if(url.equals("") && testMembers.containsKey(url)){
                 AlertBox.displayError("Error", "URL Input Error: Global Config For Tests Has Been Set", "You've inputted a global config (which has empty url set); you have to input a url to identify this config.");
                 return;
             }
 
-            TestMember testMember = new TestMember(url, first_button_XPath_text_field.getText(), second_button_XPath_text_field.getText(), getSelectorXPath(), open_new_page_XPath_text_field.getText(), click_interval_text_field.getText(), submit_button_XPath_text_field.getText());
+            TestMember testMember = new TestMember(url, first_button_XPath_text_field.getText().trim(), second_button_XPath_text_field.getText().trim(), getSelectorXPath(), open_new_page_XPath_text_field.getText().trim(), click_interval_text_field.getText().trim(), submit_button_XPath_text_field.getText().trim());
             testMembers.put(url, testMember);
             itemTemplates.add(new TestItemTemplate(url, "Test Info"));
 
@@ -206,18 +206,18 @@ public class TestInfoEditorController {
     }
 
     private boolean checkIntegrity(){
-        if(page_url_text_field.getText().equals(""))
+        if(page_url_text_field.getText().isBlank())
             MainEntrance.logWarning("The Page URL For This Test Is Empty! This Configuration Is Used For All Pages That Don't Have URL Specified!");
 
         String secondButtonXPath = second_button_XPath_text_field.getText();
 
-        if(secondButtonXPath.equals("")){
+        if(secondButtonXPath.isBlank()){
             AlertBox.displayError("Error", "Input Error: Empty Second Button XPath", "You have to input a XPath for entering test!");
             return false;
         }
 
         if(value_selector_check_box.isSelected()){
-            if(value_selector_text_field.getText().equals("") || tag_combo_box.getSelectionModel().getSelectedItem().equals("")){
+            if(value_selector_text_field.getText().isBlank() || tag_combo_box.getSelectionModel().getSelectedItem().isBlank()){
                 AlertBox.displayError("Error", "Input Error: No Value In The First Selector", "You have to input a value to the selector");
                 return false;
             }
@@ -235,12 +235,12 @@ public class TestInfoEditorController {
             String radioText = radio_combo_box.getSelectionModel().getSelectedItem();
             String linkText = link_combo_box.getSelectionModel().getSelectedItem();
 
-            if(radioText == null || radioText.equals("")){
+            if(radioText == null || radioText.isBlank()){
                 AlertBox.displayError("Error", "Input Error: No Value In Radio ComboBox", "You have to input a value to the selector");
                 return false;
             }
 
-            if(linkText == null || linkText.equals("")){
+            if(linkText == null || linkText.isBlank()){
                 AlertBox.displayError("Error", "Input Error: No Value In Link ComboBox", "You have to input a value to the selector");
                 return false;
             }
@@ -248,8 +248,8 @@ public class TestInfoEditorController {
             String tagName = alternative_tag_combo_box.getSelectionModel().getSelectedItem();
             String param = param_combo_box.getSelectionModel().getSelectedItem();
 
-            if(tagName.equals("") || param.equals("")){
-                if(linkText == null || linkText.equals("")){
+            if(tagName.isBlank() || param.isBlank()){
+                if(linkText.isBlank()){
                     AlertBox.displayError("Error", "Input Error: No Value In Tag Or Parameter ComboBox", "You have to input a value to the selector");
                     return false;
                 }
@@ -263,7 +263,7 @@ public class TestInfoEditorController {
 
         String submitButtonXPath = submit_button_XPath_text_field.getText();
 
-        if(submitButtonXPath.equals("")){
+        if(submitButtonXPath.isBlank()){
             AlertBox.displayError("Error", "Input Error: Empty Submit Button XPath", "You have to input a XPath for submitting test!");
             return false;
         }

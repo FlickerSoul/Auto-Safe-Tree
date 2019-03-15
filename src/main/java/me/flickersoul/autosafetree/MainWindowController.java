@@ -16,10 +16,9 @@ import javafx.scene.layout.HBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
-import net.sourceforge.htmlunit.corejs.javascript.tools.shell.Main;
 import org.apache.log4j.Level;
 
-import java.awt.*;
+import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -62,7 +61,7 @@ public class MainWindowController {
     SurveyInfoEditorController surveyInfoEditorController;
     Stage stage = new Stage();
 
-    private static HashMap<String, TestMember> testMembers = new HashMap<>();  //TODO 换成map，url和config对应
+    private static HashMap<String, TestMember> testMembers = new HashMap<>();
     private static HashMap<String, SurveyMember> surveyMembers = new HashMap<>();
 
     private static BooleanProperty workingProperty = new SimpleBooleanProperty(false);
@@ -167,7 +166,7 @@ public class MainWindowController {
 
             stage.showAndWait();
         } catch (IOException e) {
-            MainEntrance.logError(e);
+            MainEntrance.logError(e.getMessage());
         }
     }
 
@@ -187,7 +186,7 @@ public class MainWindowController {
 
             stage.showAndWait();
         } catch (IOException e) {
-            MainEntrance.logError(e);
+            MainEntrance.logError(e.getMessage());
         }
     }
 
@@ -383,7 +382,7 @@ class ItemListView extends ListView<ItemTemplate> {
 
                                     stage.showAndWait();
                                 } catch (IOException e) {
-                                    MainEntrance.logError(e);
+                                    MainEntrance.logError(e.getMessage());
                                 }
                             } else if(item instanceof SurveyItemTemplate) {
                                 SurveyItemTemplate temp = (SurveyItemTemplate) item;
@@ -398,7 +397,7 @@ class ItemListView extends ListView<ItemTemplate> {
 
                                     stage.showAndWait();
                                 } catch (IOException e) {
-                                    MainEntrance.logError(e);
+                                    MainEntrance.logError(e.getMessage());
                                 }
                             }
                         }

@@ -18,7 +18,7 @@ public class ProcessingThread implements Callable<Integer> {
 
     private final static Pattern RADIO_PATTERN = Pattern.compile("//(\\w+)\\[@(\\w+)='(\\w+?)(No.|ABC)(\\w+?)(No.|ABC)'\\]");
 
-    private static final String GLOBAL_CONFIG_KEY_FOR_TEST = ""; //TODO make 重试queue
+    private static final String GLOBAL_CONFIG_KEY_FOR_TEST = "";
 
     private boolean isMaleStudent;
     private String accountName;
@@ -28,9 +28,7 @@ public class ProcessingThread implements Callable<Integer> {
 
     public static final int DONE = 0;
     public static final int LOGIN_FAILED = 1;
-    public static final int CANNOT_OPEN_TEST_PAGE = 2;
     public static final int INCOMPLETE_ERROR = 3;
-    public static final int CANNOT_FIND_ELEMENT_ERROR_IN_TESTS = 4;
     public static final int CANNOT_FIND_ELEMENT_ERROR_IN_SURVEY = 5;
     public static final int CANNOT_LOAD_NEXT_PAGE = 6;
     public static final int UNKNOWN_ERROR = 7;
@@ -42,11 +40,11 @@ public class ProcessingThread implements Callable<Integer> {
     private static Logger logger = MainEntrance.getLogger();
 
     public ProcessingThread(String accountName, String password, boolean isMaleStudent){
-        MainEntrance.logInfo("Start Running Auto Complete On Thread: " + this);
-
         this.accountName = accountName;
         this.password = password;
         this.isMaleStudent = isMaleStudent;
+
+        MainEntrance.logInfo("Start Running Auto Complete On Thread: " + this);
 
         initWebClient();
     }
@@ -116,13 +114,13 @@ public class ProcessingThread implements Callable<Integer> {
         return super.toString() + ": " + accountName + "; password: " + password + "; Is Male Student: " + isMaleStudent;
     }
 
-    private int work(){
+    private int work() {
         logInfoWithOwner("Requesting Home Page...");
         HtmlPage rawPage = null;
         try {
             rawPage = webClient.getPage(HOME_PAGE);
         } catch (IOException e) {
-            MainEntrance.logError(e);
+            MainEntrance.logError(e.getMessage());
         }
         logInfoWithOwner("Got Home Page");
 
@@ -144,7 +142,6 @@ public class ProcessingThread implements Callable<Integer> {
         } catch (IOException e) {
             logFatalWithOwner(e.getMessage());
             logInfoWithOwner("Cannot Type In Account Name! Returning With Error Code: " + CANNOT_TYPE_IN);
-
         }
         logInfoWithOwner("Type In Account Info Is Done");
 
@@ -161,31 +158,31 @@ public class ProcessingThread implements Callable<Integer> {
         }
 
 
-        try{
+        try {
             logInfoWithOwner("Checking Login Status...");
 
             loginPage.getHtmlElementById("stuCss");
 
             logInfoWithOwner("Login Successfully");
-        } catch (Exception e){
-            try{
+        } catch (Exception e) {
+            try {
                 logWarningWithOwner("Cannot Find Login Status, Check Whether It's A New Account.");
                 HtmlAnchor anchor = loginPage.getFirstByXPath("//a[@onclick='PwdClose()']");
-                if(anchor != null) {
+                if (anchor != null) {
                     logInfoWithOwner("It's a new account, and its password should be reset. Skipping reset process...");
                     loginPage = anchor.click();
                 }
                 logInfoWithOwner("Skipped Resetting Password");
-            } catch (NullPointerException e1){
+            } catch (NullPointerException e1) {
                 logErrorWithOwner("The Password May Be Incorrect!");
             } catch (IOException e1) {
                 logErrorWithOwner(e1.getMessage() + "\nUnknown Error");
             }
 
-            try{
+            try {
                 loginPage.getHtmlElementById("stuCss");
                 logInfoWithOwner("Login Successfully");
-            } catch (Exception e1){
+            } catch (Exception e1) {
                 logErrorWithOwner("Cannot Find stuCss Element; Loging May Be Failed!");
             }
         }
@@ -212,6 +209,27 @@ public class ProcessingThread implements Callable<Integer> {
 
         logInfoWithOwner("Getting Complete Status...");
 
+        int incompleteTaskSize = myHomeWorkPage.getByXPath("//tr[@class='tr_wwc']").size();
+
+        if (incompleteTaskSize == 0) {
+            logInfoWithOwner("Did Not Detect Any Incomplete Work On Account! Exiting With Code: " + DONE);
+            return DONE;
+        } else if(incompleteTaskSize == myHomeWorkPage.getByXPath("//tbody/tr").size()){
+            MainEntrance.logDebug("The Incomplete Task In Init Section Num Equals To Total Task Number; Try To Sleep Extra Time And Recheck");
+            try {
+                sleep(700);
+                MainEntrance.logDebug("Slept Extra In Init Section Time");
+            } catch (InterruptedException e) {
+                MainEntrance.logWarning("Extra Sleep In Init Section Is Interrupted");
+                MainEntrance.logDebug(e.getMessage());
+            }
+
+            if(myHomeWorkPage.getByXPath("//tr[@class='tr_wwc']").size() == 0){
+                logInfoWithOwner("Did Not Detect Any Incomplete Work On Account! Exiting With Code: " + DONE);
+                return DONE;
+            }
+        }
+
         List<HtmlElement> testAnchors;
         List<HtmlElement> surveyAnchors;
 
@@ -219,7 +237,7 @@ public class ProcessingThread implements Callable<Integer> {
             testAnchors = myHomeWorkPage.getByXPath("//tr[@class='tr_wwc']/td[3][contains(text(), '安全学习')]/../td[2]/div/a");
             surveyAnchors = myHomeWorkPage.getByXPath("//tr[@class='tr_wwc']/td[3][contains(text(), '专题活动')]/../td[2]/div/a");
 
-        } catch (Exception e){
+        } catch (Exception e) {
             logErrorWithOwner(e.getMessage() + "\nLogin Failed! Exiting With Error Code: " + LOGIN_FAILED);
             return LOGIN_FAILED;
         }
@@ -227,15 +245,10 @@ public class ProcessingThread implements Callable<Integer> {
         int testSize = testAnchors.size();
         int surveySize = surveyAnchors.size();
 
-        if(testSize + surveySize == 0) {
-            logInfoWithOwner("Did Not Detect Any Incomplete Work On Account! Exiting With Code: " + DONE);
-            return DONE;
-        }
-
         logInfoWithOwner("You Have " + (testSize + surveySize) + " Task(s) Remaining Incomplete! Test(s): " + testSize + "; Survey(s): " + surveySize);
 
         logInfoWithOwner("Start Finishing Tests...");
-        if(testAnchors.size() != 0) {
+        if (testAnchors.size() != 0) {
             for (HtmlElement subAnchor : testAnchors) {
                 HtmlPage testPage = null;
                 try {
@@ -252,7 +265,7 @@ public class ProcessingThread implements Callable<Integer> {
                 if (testMember == null)
                     testMember = MainWindowController.getItemFromTestConfigs(GLOBAL_CONFIG_KEY_FOR_TEST);
 
-                if (testMember == null){
+                if (testMember == null) {
                     logErrorWithOwner("Cannot Find The Configuration For This Test: " + testPage + "; Skipping");
                     continue;
                 }
@@ -263,7 +276,7 @@ public class ProcessingThread implements Callable<Integer> {
                     logDebugWithOwner("Wait JS To Load...");
                     sleep(500);
                 } catch (InterruptedException e) {
-                    MainEntrance.logError(e);
+                    MainEntrance.logError(e.getMessage());
                 }
 
                 if (!testMember.getFirstButtonXPath().isBlank()) {
@@ -282,7 +295,7 @@ public class ProcessingThread implements Callable<Integer> {
                     testPage = stepTwoAnchor.click();
                 } catch (IOException e) {
                     logFatalWithOwner("Cannot Open Test Page: " + testPage + "!");
-                } catch (NullPointerException e){
+                } catch (NullPointerException e) {
                     logFatalWithOwner("Cannot Find Entrance Button For The Test On Page:  " + testPage + "!");
                     logDebugWithOwner(testPage.getWebResponse().getContentAsString());
                 }
@@ -325,11 +338,11 @@ public class ProcessingThread implements Callable<Integer> {
         }
 
 
-        if(surveySize != 0) {
+        if (surveySize != 0) {
             logInfoWithOwner("Start Completing Survey(s)");
             //开始
 
-            for(SurveyMember member : MainWindowController.getSurveyMembers().values()){
+            for (SurveyMember member : MainWindowController.getSurveyMembers().values()) {
                 HtmlPage surveyPage;
                 String url = member.getPageUrl();
                 try {
@@ -346,7 +359,7 @@ public class ProcessingThread implements Callable<Integer> {
                     logInfoWithOwner("Waiting JS"); //??????
                     sleep(500);
                 } catch (InterruptedException e) {
-                    MainEntrance.logError(e);
+                    MainEntrance.logError(e.getMessage());
                 }
 
                 //点击第一个观看完成框
@@ -359,7 +372,7 @@ public class ProcessingThread implements Callable<Integer> {
                     logInfoWithOwner("Clicked The \"Watched\" Button");
                 } catch (IOException e) {
                     logErrorWithOwner("Cannot Click On First Button On Page " + surveyPage + "; This May Result In Incomplete Task");
-                } catch (NullPointerException e){
+                } catch (NullPointerException e) {
                     logErrorWithOwner("Cannot Click On First Button On Page " + surveyPage);
                 }
 
@@ -395,11 +408,11 @@ public class ProcessingThread implements Callable<Integer> {
 
                 Matcher matcher = RADIO_PATTERN.matcher(member.getSelectorXPath());
                 // "//(\\w+)\\[@(\\w+)='(\\w+?)(No.|ABC)(\\w+?)(No.|ABC)'\\]"
-                if(matcher.find()){
+                if (matcher.find()) {
                     final String RADIO = matcher.group(3);
                     final String LINK = matcher.group(5);
 
-                    if(matcher.group(4).equals("No.")){
+                    if (matcher.group(4).equals("No.")) {
                         for (int i = 0; i < answerArray.length; i++) {
                             int answerRecord = answerArray[i] - 'A' + ABC_RECORD;
                             int noRecord = i + NO_RECORD;
@@ -468,14 +481,14 @@ public class ProcessingThread implements Callable<Integer> {
                 try {
                     surveyTestPage = input.click();
                 } catch (IOException e) {
-                    MainEntrance.logError(e);
+                    MainEntrance.logError(e.getMessage());
                 }
                 logInfoWithOwner("click on submit " + input);
 
                 try {
                     sleep(500);
                 } catch (InterruptedException e) {
-                    MainEntrance.logError(e);
+                    MainEntrance.logError(e.getMessage());
                 }
                 logInfoWithOwner("Complete: " + surveyTestPage);
             }
@@ -487,23 +500,39 @@ public class ProcessingThread implements Callable<Integer> {
             myHomeWorkPage = webClient.getPage(MY_HOME_WORK_PAGE);
 
             sleep(1000);
-
-            List<HtmlElement> remainingAnchors = myHomeWorkPage.getByXPath("//tr[@class='tr_wwc']");
-
-            if(remainingAnchors.size() == 0) {
-                MainEntrance.logInfo("\n===================\n\"" + accountName + "\" has completed the Test(s)!\nBy FlickerSoul\n===================");
-                return DONE;
-            } else{
-                logErrorWithOwner("There Is (Are) " + remainingAnchors.size() + " Work(s) Remaining Incomplete! Returning With Error Code: " + INCOMPLETE_ERROR);
-                return INCOMPLETE_ERROR;
-            }
         } catch (IOException e) {
-            MainEntrance.logError(e);
+            MainEntrance.logError(e.getMessage());
         } catch (InterruptedException e) {
-            MainEntrance.logError(e);
+            MainEntrance.logError(e.getMessage());
         }
 
+        int incompleteTaskNum = myHomeWorkPage.getByXPath("//tr[@class='tr_wwc']").size();
 
-        return UNKNOWN_ERROR;
+        if (incompleteTaskNum == 0) {
+            MainEntrance.logInfo("\n===================\n\"" + accountName + "\" has completed the Test(s)!\nBy FlickerSoul\n===================");
+            return DONE;
+        } else if(incompleteTaskNum == myHomeWorkPage.getByXPath("//tbody/tr").size()){
+            MainEntrance.logDebug("The Incomplete Task In Finalizing Section Num Equals To Total Task Number; Try To Sleep Extra Time And Recheck");
+            try {
+                sleep(700);
+                MainEntrance.logDebug("Slept Extra Time In Finalizing Section");
+            } catch (InterruptedException e) {
+                MainEntrance.logWarning("Extra Sleep In Finalizing Section Is Interrupted");
+                MainEntrance.logDebug(e.getMessage());
+            }
+
+            int remainingTaskSize = myHomeWorkPage.getByXPath("//tr[@class='tr_wwc']").size();
+            if (remainingTaskSize == 0) {
+                MainEntrance.logInfo("\n===================\n\"" + accountName + "\" has completed the Test(s)!\nBy FlickerSoul\n===================");
+                return DONE;
+            } else {
+                logErrorWithOwner("There Is (Are) " + remainingTaskSize + " Work(s) Remaining Incomplete! Returning With Error Code: " + INCOMPLETE_ERROR);
+                return INCOMPLETE_ERROR;
+            }
+        } else {
+            logErrorWithOwner("There Is (Are) " + incompleteTaskNum + " Work(s) Remaining Incomplete! Returning With Error Code: " + INCOMPLETE_ERROR);
+            return INCOMPLETE_ERROR;
+        }
     }
+
 }

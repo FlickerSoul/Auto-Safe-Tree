@@ -82,8 +82,9 @@ public class ThreadBootstrapper{
     }
 
     public static void terminateAllThread(){
-        for(ExecutorService service : templateThreadList.keySet()){
-            service.shutdownNow();
+        for(Map.Entry<ExecutorService, Future<Boolean>> entry : templateThreadList.entrySet()){
+            entry.getKey().shutdownNow();
+            entry.getValue().cancel(true);
         }
 
         templateThreadList.clear();
@@ -99,9 +100,9 @@ public class ThreadBootstrapper{
                     MainEntrance.logError("Something Wrong During Working On This Template; Please Click On Report Button To Send A Message To The Maintainer");
                 }
             } catch (InterruptedException e) {
-                MainEntrance.logError(e);
+                MainEntrance.logError(e.getMessage());
             } catch (ExecutionException e) {
-                MainEntrance.logError(e);
+                MainEntrance.logError(e.getMessage());
             }
         }
 
@@ -140,13 +141,6 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
     private final ExecutorService pool = Executors.newFixedThreadPool(ThreadBootstrapper.getThreadCount(), runnable -> new Thread(runnable, "Processing Thread"));
     public static final String initPassword = "123456";
 
-    public ThreadBootstrapperTemplate(File accountFile, File passwordFile, boolean isMale, boolean renewFailedThreads) {
-        this.accountFile = accountFile;
-        this.passwordFile = passwordFile;
-        this.isMale = isMale;
-        this.renewFailedThreads = renewFailedThreads;
-    }
-
     public ThreadBootstrapperTemplate(File accountFile, String accountString, File passwordFile, String passwordString, boolean isMale, boolean renewFailedThreads) {
         this.accountFile = accountFile;
         this.accountString = accountString;
@@ -172,12 +166,12 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
                 for (String account; (account = accountsReader.readLine()) != null; ) {
                     if(account.isBlank())
                         continue;
-                    accountList.add(account);
+                    accountList.add(account.trim());
                 }
             } catch (FileNotFoundException e) {
-                MainEntrance.logError(e);
+                MainEntrance.logError(e.getMessage());
             } catch (IOException e) {
-                MainEntrance.logError(e);
+                MainEntrance.logError(e.getMessage());
             }
         }
 
@@ -209,9 +203,9 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
                     return false;
                 }
             } catch (FileNotFoundException e) {
-                MainEntrance.logError(e);
+                MainEntrance.logError(e.getMessage());
             } catch (IOException e) {
-                MainEntrance.logError(e);
+                MainEntrance.logError(e.getMessage());
             }
 
 
@@ -272,8 +266,9 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
             MainEntrance.logDebug("All Results Outputted");
         } catch (InterruptedException e) {
             MainEntrance.logWarning("The Batch Executions Are Interrupted");
+            MainEntrance.logDebug(e.getMessage());
         } catch (ExecutionException e) {
-            MainEntrance.logError(e);
+            MainEntrance.logError(e.getMessage());
         }
 
         MainEntrance.logInfo("Failed Task(s): " + threadResultMap.size());
@@ -281,7 +276,7 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
         if(renewFailedThreads ){
             MainEntrance.logInfo("Renew Failed Task Is Turned On");
             if(threadResultMap.size() > 0) {
-                MainEntrance.logInfo("; Retrying");
+                MainEntrance.logInfo("Retrying");
                 try {
                     MainEntrance.logDebug("Got Renew Results");
                     for(Iterator<Map.Entry<Future<Integer>, ProcessingThread>> resultIterator = threadResultMap.entrySet().iterator(); resultIterator.hasNext(); ) {
@@ -301,8 +296,9 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
                     MainEntrance.logWarning("Failed Results: " + threadResultMap.size());
                 } catch (InterruptedException e) {
                     MainEntrance.logWarning("The Batch Executions Are Interrupted");
+                    MainEntrance.logDebug(e.getMessage());
                 } catch (ExecutionException e) {
-                    MainEntrance.logError(e);
+                    MainEntrance.logError(e.getMessage());
                 }
             }
         }

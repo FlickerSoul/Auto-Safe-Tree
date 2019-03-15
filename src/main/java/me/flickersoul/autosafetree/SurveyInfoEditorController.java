@@ -169,12 +169,12 @@ public class SurveyInfoEditorController {
     }
 
     private boolean checkIntegrity() {
-        if(page_url_text_field.getText().equals("")){
+        if(page_url_text_field.getText().isBlank()){
             AlertBox.displayError("Error", "Input Error: Page URL Is Empty", "You have to input page url manually");
             return false;
         }
 
-        if(male_student_answers_path_text_field.getText().equals("") || female_student_answers_path_text_field.getText().equals("")){
+        if(male_student_answers_path_text_field.getText().isBlank() || female_student_answers_path_text_field.getText().isBlank()){
             AlertBox.displayError("Error", "Input Error: Answer File(s) Is(Are) Missing", "You have to input all the file required");
             return false;
         }
@@ -189,13 +189,13 @@ public class SurveyInfoEditorController {
         String selection2 = no_or_abc_2_combo_box.getSelectionModel().getSelectedItem();
         String linkText = link_combo_box.getSelectionModel().getSelectedItem();
 
-        if(radioText == null || radioText.equals("")){
-            AlertBox.displayError("Error", "Input Error: No Value In Radio ComboBox", "You have to input a value to the selector");
+        if(radioText == null || radioText.isBlank()){
+            AlertBox.displayError("Error", "Input Error: No Value In Radio ComboBox", "You have to input a value to the selector for prefix");
             return false;
         }
 
-        if(linkText == null || linkText.equals("")){
-            AlertBox.displayError("Error", "Input Error: No Value In Link ComboBox", "You have to input a value to the selector");
+        if(linkText == null || linkText.isBlank()){
+            AlertBox.displayError("Error", "Input Error: No Value In Link ComboBox", "You have to input a value to the selector for linking");
             return false;
         }
 
@@ -205,7 +205,7 @@ public class SurveyInfoEditorController {
             return false;
         }
 
-        if(first_button_xpath_text_field.getText().equals("") || second_button_xpath_text_field.getText().equals("") || submit_button_xpath_text_field.getText().equals("")){
+        if(first_button_xpath_text_field.getText().isBlank() || second_button_xpath_text_field.getText().isBlank() || submit_button_xpath_text_field.getText().isBlank()){
             AlertBox.displayError("Error", "Input Error: XPath(s) Is(Are) Empty", "You have to complete all the XPaths of buttons");
             return false;
         }
