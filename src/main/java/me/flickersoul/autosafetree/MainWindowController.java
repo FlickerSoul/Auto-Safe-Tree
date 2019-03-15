@@ -1,5 +1,6 @@
 package me.flickersoul.autosafetree;
 
+import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.ListChangeListener;
@@ -24,7 +25,6 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
-
 
 public class MainWindowController {
     @FXML
@@ -53,6 +53,10 @@ public class MainWindowController {
     Button cancel_button;
     @FXML
     HBox list_view_container;
+    @FXML
+    HBox progress_bar_hbox;
+
+    private static ProgressBar progressBar;
 
     ListView<ItemTemplate> itemListView;
     ListView<LogItem> infoListView;
@@ -65,6 +69,8 @@ public class MainWindowController {
     private static HashMap<String, SurveyMember> surveyMembers = new HashMap<>();
 
     private static BooleanProperty workingProperty = new SimpleBooleanProperty(false);
+
+    public static Integer SYSTEM_PROCESSOR_CORE_COUNT = Runtime.getRuntime().availableProcessors();
 
     public static final StringConverter<Integer> converter = new StringConverter<>() {
         @Override
@@ -80,8 +86,6 @@ public class MainWindowController {
             return Integer.valueOf(string);
         }
     };
-
-
 
     public void init(){
         TestItemTemplate.setMembers(testMembers);
@@ -113,8 +117,8 @@ public class MainWindowController {
         TestInfoEditorController.setTestMembers(testMembers);
         SurveyInfoEditorController.setTestMembers(surveyMembers);
 
-        thread_num_combo_box.getItems().addAll(2, 4, 6, 8);
-        thread_num_combo_box.getSelectionModel().select(0);
+        thread_num_combo_box.getItems().addAll(2, 4, 6, 8, 10);
+        thread_num_combo_box.getSelectionModel().select(SYSTEM_PROCESSOR_CORE_COUNT);
         thread_num_combo_box.setConverter(converter);
 
         renew_check_box.setSelected(true);
@@ -123,11 +127,14 @@ public class MainWindowController {
 
         workingProperty.addListener((observable, oldValue, newValue) -> {
             if(newValue){
+                setUpProgressBar();
                 start_button.setDisable(true);
                 cancel_button.setDisable(false);
             } else {
                 start_button.setDisable(false);
                 cancel_button.setDisable(true);
+                cancelProgressBar();
+                ThreadBootstrapperTemplate.clearTaskCount();
             }
         });
 
@@ -209,6 +216,12 @@ public class MainWindowController {
         }
     }
 
+    private void setUpProgressBar(){
+        progressBar = new ProgressBar(0);
+        progressBar.setPrefSize(500, 18);
+        progress_bar_hbox.getChildren().add(progressBar);
+    }
+
     public static void switchWorkingStatus(boolean sign){
         workingProperty.set(sign);
     }
@@ -217,6 +230,20 @@ public class MainWindowController {
     public void cancel(){
         ThreadBootstrapper.terminateAllThread();
         workingProperty.set(false);
+    }
+
+    private void cancelProgressBar(){
+        Platform.runLater(() ->{
+            progress_bar_hbox.getChildren().remove(progressBar);
+            progressBar = null;
+        });
+    }
+
+    public static void setProgressBarRation(double ratio){
+        if(progressBar != null)
+            Platform.runLater(() -> progressBar.setProgress(ratio));
+        else
+            MainEntrance.logError("Progress Bar Is Null; Cannot Set Value");
     }
 
     @FXML
@@ -243,7 +270,7 @@ public class MainWindowController {
     }
 
     private boolean checkIntegrity(){
-        if(male_account_text_field.getText().isBlank() || female_account_text_field.getText().isBlank()){
+        if(male_account_text_field.getText().isBlank() && female_account_text_field.getText().isBlank()){
             AlertBox.displayError("Error", "Input Error: Account Info File(s) Is(Are) Empty", "You have to input the path of account files, either by entering manually or click the button on the right to select.");
             return false;
         }

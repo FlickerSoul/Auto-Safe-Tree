@@ -44,13 +44,13 @@ public class ProcessingThread implements Callable<Integer> {
         this.password = password;
         this.isMaleStudent = isMaleStudent;
 
-        MainEntrance.logInfo("Start Running Auto Complete On Thread: " + this);
+        MainEntrance.logDebug("Start Running Auto Complete On Thread: " + this);
 
         initWebClient();
     }
 
     private void initWebClient(){
-        logInfoWithOwner("Start Initiating Web Client...");
+        logDebugWithOwner("Start Initiating Web Client...");
         webClient.setCssErrorHandler(new SilentCssErrorHandler());
         webClient.setAjaxController(new NicelyResynchronizingAjaxController());
         webClient.getOptions().setJavaScriptEnabled(true);
@@ -65,7 +65,7 @@ public class ProcessingThread implements Callable<Integer> {
         webClient.setAlertHandler((page, message) -> logErrorWithOwner("This page, " + page + ", has a message: \"" + message + "\"."));
         webClient.setHTMLParserListener(null);
 
-        logInfoWithOwner("Finish Initiating Web Client");
+        logDebugWithOwner("Finish Initiating Web Client");
     }
 
     @Override
@@ -73,6 +73,7 @@ public class ProcessingThread implements Callable<Integer> {
         int result = work();
 
         if(result == 0) {
+            ThreadBootstrapperTemplate.currentTaskAdd();
             logInfoWithOwner("Closing Web Client...");
             webClient.close();
             System.gc();
@@ -115,7 +116,7 @@ public class ProcessingThread implements Callable<Integer> {
     }
 
     private int work() {
-        logInfoWithOwner("Requesting Home Page...");
+        logDebugWithOwner("Requesting Home Page...");
         HtmlPage rawPage = null;
         try {
             rawPage = webClient.getPage(HOME_PAGE);
@@ -124,26 +125,23 @@ public class ProcessingThread implements Callable<Integer> {
         }
         logInfoWithOwner("Got Home Page");
 
-        logInfoWithOwner("Getting Required Element...");
+        logDebugWithOwner("Getting Required Element...");
         HtmlAnchor submitInput = rawPage.getHtmlElementById("LoginButton");
         HtmlTextInput account = rawPage.getHtmlElementById("UName");
         HtmlPasswordInput password = rawPage.getHtmlElementById("PassWord");
-        logInfoWithOwner("Got Required Element For Login");
+        logDebugWithOwner("Got Required Element For Login");
 
         logInfoWithOwner("Typing in Account Info...\nUser Name: " + accountName + "\nPassword: " + this.password);
         try {
             account.type(accountName);
-        } catch (IOException e) {
-            logFatalWithOwner(e.getMessage());
-            logInfoWithOwner("Cannot Type In Account Name! Returning With Error Code: " + CANNOT_TYPE_IN);
-        }
-        try {
             password.type(this.password);
         } catch (IOException e) {
             logFatalWithOwner(e.getMessage());
-            logInfoWithOwner("Cannot Type In Account Name! Returning With Error Code: " + CANNOT_TYPE_IN);
+            logFatalWithOwner("Cannot Type In Account Name! Returning With Error Code: " + CANNOT_TYPE_IN);
+            return CANNOT_TYPE_IN;
         }
-        logInfoWithOwner("Type In Account Info Is Done");
+
+        logDebugWithOwner("Type In Account Info Is Done");
 
         logInfoWithOwner("Login in...");
         HtmlPage loginPage = null;
@@ -159,7 +157,7 @@ public class ProcessingThread implements Callable<Integer> {
 
 
         try {
-            logInfoWithOwner("Checking Login Status...");
+            logDebugWithOwner("Checking Login Status...");
 
             loginPage.getHtmlElementById("stuCss");
 
@@ -172,7 +170,7 @@ public class ProcessingThread implements Callable<Integer> {
                     logInfoWithOwner("It's a new account, and its password should be reset. Skipping reset process...");
                     loginPage = anchor.click();
                 }
-                logInfoWithOwner("Skipped Resetting Password");
+                logDebugWithOwner("Skipped Resetting Password");
             } catch (NullPointerException e1) {
                 logErrorWithOwner("The Password May Be Incorrect!");
             } catch (IOException e1) {
@@ -189,7 +187,7 @@ public class ProcessingThread implements Callable<Integer> {
 
         //Above is login
 
-        logInfoWithOwner("Checking Work Status...");
+        logInfoWithOwner("Checking Status...");
         HtmlPage myHomeWorkPage;
 
         try {
@@ -198,7 +196,8 @@ public class ProcessingThread implements Callable<Integer> {
             logFatalWithOwner("Cannot Get Into HomeWork Page; Returning With Error Code: " + CANNOT_OPEN_PAGE);
             return CANNOT_OPEN_PAGE;
         }
-        logInfoWithOwner("Got Home Work Page");
+
+        logDebugWithOwner("Got Home Work Page");
 
         try {
             logInfoWithOwner("Waiting JavaScript Loading");
@@ -207,7 +206,7 @@ public class ProcessingThread implements Callable<Integer> {
             logErrorWithOwner("Waiting Interrupted");
         }
 
-        logInfoWithOwner("Getting Complete Status...");
+        logDebugWithOwner("Getting Complete Status...");
 
         int incompleteTaskSize = myHomeWorkPage.getByXPath("//tr[@class='tr_wwc']").size();
 
@@ -230,25 +229,26 @@ public class ProcessingThread implements Callable<Integer> {
             }
         }
 
-        List<HtmlElement> testAnchors;
-        List<HtmlElement> surveyAnchors;
-
         try {
-            testAnchors = myHomeWorkPage.getByXPath("//tr[@class='tr_wwc']/td[3][contains(text(), '安全学习')]/../td[2]/div/a");
-            surveyAnchors = myHomeWorkPage.getByXPath("//tr[@class='tr_wwc']/td[3][contains(text(), '专题活动')]/../td[2]/div/a");
-
+            if(myHomeWorkPage.getByXPath("//tbody[@id='mun_-1_1']").size() == 0){
+                throw new Exception("Login Failed");
+            }
         } catch (Exception e) {
-            logErrorWithOwner(e.getMessage() + "\nLogin Failed! Exiting With Error Code: " + LOGIN_FAILED);
+            logFatalWithOwner(e.getMessage() + "\nLogin Failed! Exiting With Error Code: " + LOGIN_FAILED);
             return LOGIN_FAILED;
         }
+
+        List<HtmlElement> testAnchors = myHomeWorkPage.getByXPath("//tr[@class='tr_wwc']/td[3][contains(text(), '安全学习')]/../td[2]/div/a");
+        List<HtmlElement> surveyAnchors = myHomeWorkPage.getByXPath("//tr[@class='tr_wwc']/td[3][contains(text(), '专题活动')]/../td[2]/div/a");
 
         int testSize = testAnchors.size();
         int surveySize = surveyAnchors.size();
 
         logInfoWithOwner("You Have " + (testSize + surveySize) + " Task(s) Remaining Incomplete! Test(s): " + testSize + "; Survey(s): " + surveySize);
 
-        logInfoWithOwner("Start Finishing Tests...");
+        logInfoWithOwner("Start Finishing Task(s)...");
         if (testAnchors.size() != 0) {
+            logInfoWithOwner("Start Finishing Test(s)");
             for (HtmlElement subAnchor : testAnchors) {
                 HtmlPage testPage = null;
                 try {
@@ -336,7 +336,6 @@ public class ProcessingThread implements Callable<Integer> {
                 logInfoWithOwner("Submit test: " + input + " : " + testPage.getUrl());
             }
         }
-
 
         if (surveySize != 0) {
             logInfoWithOwner("Start Completing Survey(s)");
@@ -494,7 +493,7 @@ public class ProcessingThread implements Callable<Integer> {
             }
         }
 
-        logInfoWithOwner("Checking Work Status...");
+        logInfoWithOwner("Checking Status...");
 
         try {
             myHomeWorkPage = webClient.getPage(MY_HOME_WORK_PAGE);

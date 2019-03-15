@@ -132,6 +132,9 @@ class CloseListener implements Callable<Boolean> {
 }
 
 class ThreadBootstrapperTemplate implements Callable<Boolean>{
+    private static int totalTaskNum;
+    private static Integer currentTask = 0;
+
     private File accountFile;
     private String accountString;
     private File passwordFile;
@@ -160,6 +163,10 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
         String universalPassword = initPassword;
 
         if(accountFile == null){
+            if(accountString.isBlank()){
+                MainEntrance.logInfo("Empty Account Info; Exiting...");
+                return true;
+            }
             accountList.addAll(Arrays.asList(accountString.split(" ")));
         } else {
             try (BufferedReader accountsReader = new BufferedReader(new FileReader(accountFile))) {
@@ -182,6 +189,9 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
             MainEntrance.logFatal("Exiting This Thread: " + this.toString());
             return false;
         }
+
+        totalTaskNum += linesInAccountFile;
+        MainEntrance.logInfo("Total Task Num Now Is " + totalTaskNum);
 
         if(passwordFile == null) {
             if(passwordString.isBlank()){
@@ -207,8 +217,6 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
             } catch (IOException e) {
                 MainEntrance.logError(e.getMessage());
             }
-
-
         }
 
         int linesInPasswordFile = 0;
@@ -243,9 +251,7 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
             }
         }
 
-        MainEntrance.logDebug("Add All Thread");
-        MainEntrance.logDebug("Ready To Invoke All Task");
-
+        MainEntrance.logDebug("Added All Thread! Ready To Invoke All Task!");
 
         try {
             for(Iterator<Map.Entry<Future<Integer>, ProcessingThread>> resultIterator = threadResultMap.entrySet().iterator(); resultIterator.hasNext(); ) {
@@ -323,6 +329,17 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
 
     public ExecutorService getPool(){
         return pool;
+    }
+
+    public static void clearTaskCount(){
+        totalTaskNum = 0;
+        currentTask = 0;
+        MainEntrance.logDebug("Cleared Task Count");
+    }
+
+    public synchronized static void currentTaskAdd(){
+        currentTask += 1;
+        MainWindowController.setProgressBarRation(currentTask/(double)totalTaskNum);
     }
 }
 

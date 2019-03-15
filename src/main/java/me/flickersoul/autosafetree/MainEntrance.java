@@ -39,6 +39,8 @@ public class MainEntrance extends Application {
             }
         });
 
+        primaryStage.setResizable(false);
+
         primaryStage.show();
     }
 
