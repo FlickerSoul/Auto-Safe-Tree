@@ -228,8 +228,8 @@ public class MainWindowController {
 
     @FXML
     public void cancel(){
-        ThreadBootstrapper.terminateAllThread();
-        workingProperty.set(false);
+        cancel_button.setDisable(true);
+        ThreadBootstrapper.invokeTermination();
     }
 
     private void cancelProgressBar(){

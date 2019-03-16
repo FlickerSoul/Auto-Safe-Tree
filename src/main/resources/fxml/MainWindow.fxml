@@ -31,15 +31,15 @@
                               <Font size="15.0" />
                            </font>
                         </Text>
-                        <HBox prefHeight="100.0" prefWidth="200.0" spacing="3.0">
+                        <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="3.0">
                            <children>
-                              <TextField fx:id="male_account_text_field" promptText="Accounts" />
+                              <TextField fx:id="male_account_text_field" prefWidth="180.0" promptText="Accounts" />
                               <Button mnemonicParsing="false" onAction="#chooseMaleAccount" text="..." />
                            </children>
                         </HBox>
-                        <HBox prefHeight="100.0" prefWidth="200.0" spacing="3.0">
+                        <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="3.0">
                            <children>
-                              <TextField fx:id="male_password_text_field" promptText="Password If Required" />
+                              <TextField fx:id="male_password_text_field" prefWidth="180.0" promptText="Password If Required" />
                               <Button mnemonicParsing="false" onAction="#chooseMalePassword" text="..." />
                            </children>
                         </HBox>
@@ -52,15 +52,15 @@
                               <Font size="15.0" />
                            </font>
                         </Text>
-                        <HBox prefHeight="100.0" prefWidth="200.0" spacing="3.0">
+                        <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="3.0">
                            <children>
-                              <TextField fx:id="female_account_text_field" promptText="Accounts" />
+                              <TextField fx:id="female_account_text_field" prefHeight="25.0" prefWidth="180.0" promptText="Accounts" />
                               <Button mnemonicParsing="false" onAction="#chooserFemaleAccount" text="..." />
                            </children>
                         </HBox>
-                        <HBox prefHeight="100.0" prefWidth="200.0" spacing="3.0">
+                        <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="3.0">
                            <children>
-                              <TextField fx:id="female_password_text_field" promptText="Password If Required" />
+                              <TextField fx:id="female_password_text_field" prefHeight="25.0" prefWidth="180.0" promptText="Password If Required" />
                               <Button mnemonicParsing="false" onAction="#chooserFemalePassword" text="..." />
                            </children>
                         </HBox>

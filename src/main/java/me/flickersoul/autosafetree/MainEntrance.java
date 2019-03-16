@@ -13,8 +13,8 @@ public class MainEntrance extends Application {
     public static void main(String[] args){
         launch(args);
         logger.info("==================Application Closed==================\n");
+//        ThreadBootstrapper.terminateAllThread();
         ThreadBootstrapper.shutdownBootstrapperThreadsPools();
-        ThreadBootstrapper.terminateAllThread();
     }
 
 

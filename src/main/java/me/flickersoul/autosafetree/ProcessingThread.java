@@ -152,7 +152,7 @@ public class ProcessingThread implements Callable<Integer> {
             logFatalWithOwner("Cannot Click On Login Button");
             return LOGIN_FAILED;
         } catch (InterruptedException e) {
-            logWarningWithOwner("The Sleep After Clicking stuCss Is Interrupted;");
+            logDebugWithOwner("The Sleep After Clicking stuCss Is Interrupted;");
         }
 
 
@@ -203,7 +203,7 @@ public class ProcessingThread implements Callable<Integer> {
             logInfoWithOwner("Waiting JavaScript Loading");
             sleep(1000);
         } catch (InterruptedException e) {
-            logErrorWithOwner("Waiting Interrupted");
+            logDebugWithOwner("Waiting Interrupted");
         }
 
         logDebugWithOwner("Getting Complete Status...");

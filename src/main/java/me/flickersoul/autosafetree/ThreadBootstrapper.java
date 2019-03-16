@@ -5,15 +5,17 @@ import java.util.*;
 import java.util.concurrent.*;
 
 public class ThreadBootstrapper{
-    private static final ExecutorService closeListenerThreadPool = Executors.newSingleThreadExecutor(callable -> new Thread(callable, "Close Listenner Thread"));
+    private static final ExecutorService closeListenerThreadPool = Executors.newFixedThreadPool(2, callable -> new Thread(callable, "Close Listenner Thread"));
     private static final ExecutorService bootstrapperThreadsPool = Executors.newFixedThreadPool(2, callable -> new Thread(callable, "Processing Thread Bootstrap Thread"));
     private static Future<Boolean> closeFuture;
+    private static final TerminateListener terminationListener = new TerminateListener();
+    private static final CloseListener closeListener = new CloseListener();
 
     private static int threadCount;
-    private static final HashMap<ExecutorService, Future<Boolean>> templateThreadList = new HashMap<>();
+    private static final HashMap<ExecutorService, Future<Boolean>> templateFutureMap = new HashMap<>();
 
     public synchronized static void init(String maleAccount, String malePassword, String femaleAccount, String femalePassword, int threadNum, boolean renewFailedThreads){
-        templateThreadList.clear();
+        templateFutureMap.clear();
         if(closeFuture != null && (closeFuture.isDone() || closeFuture.isCancelled()))
             closeFuture.cancel(true);
 
@@ -62,15 +64,15 @@ public class ThreadBootstrapper{
 
         ThreadBootstrapperTemplate maleTemplate = new ThreadBootstrapperForMaleStudents(maleStudentsAccounts, maleAccount, malePasswords, malePassword, renewFailedThreads);
 
-        Future<Boolean> maleFuture = bootstrapperThreadsPool.submit(maleTemplate);
+        Future<Boolean> maleTemplateFuture = bootstrapperThreadsPool.submit(maleTemplate);
 
-        templateThreadList.put(maleTemplate.getPool(), maleFuture);
+        templateFutureMap.put(maleTemplate.getPool(), maleTemplateFuture);
         MainEntrance.logDebug("Start Male Students' Processing Thread");
 
         ThreadBootstrapperTemplate femaleTemplate = new ThreadBootstrapperForFemaleStudents(femaleStudentsAccounts, femaleAccount, femalePasswords, femalePassword, renewFailedThreads);
-        Future<Boolean> femaleFuture = bootstrapperThreadsPool.submit(femaleTemplate);
+        Future<Boolean> femaleTemplateFuture = bootstrapperThreadsPool.submit(femaleTemplate);
 
-        templateThreadList.put(femaleTemplate.getPool(), femaleFuture);
+        templateFutureMap.put(femaleTemplate.getPool(), femaleTemplateFuture);
 
         MainEntrance.logDebug("Start Female Students' Processing Thread");
 
@@ -78,20 +80,32 @@ public class ThreadBootstrapper{
     }
 
     private static void invokeCloseListener(){
-        closeFuture = closeListenerThreadPool.submit(new CloseListener());
+        closeFuture = closeListenerThreadPool.submit(closeListener);
+    }
+
+    public static void invokeTermination(){
+        closeListenerThreadPool.submit(terminationListener);
     }
 
     public static void terminateAllThread(){
-        for(Map.Entry<ExecutorService, Future<Boolean>> entry : templateThreadList.entrySet()){
+        for(Map.Entry<ExecutorService, Future<Boolean>> entry : templateFutureMap.entrySet()){
             entry.getKey().shutdownNow();
+            try {
+                MainEntrance.logInfo("Finishing Current Working Job; Please Wait...");
+                entry.getKey().awaitTermination(1, TimeUnit.MINUTES);
+                MainEntrance.logInfo("Job Finished");
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+
             entry.getValue().cancel(true);
         }
 
-        templateThreadList.clear();
+        templateFutureMap.clear();
     }
 
     public static void getAllFuture(){
-        for(Future<Boolean> future : templateThreadList.values()){
+        for(Future<Boolean> future : templateFutureMap.values()){
             try {
                 boolean result = future.get();
                 if(result){
@@ -106,7 +120,7 @@ public class ThreadBootstrapper{
             }
         }
 
-        templateThreadList.clear();
+        templateFutureMap.clear();
     }
 
     public static int getThreadCount(){
@@ -131,6 +145,17 @@ class CloseListener implements Callable<Boolean> {
     }
 }
 
+class TerminateListener implements Callable<Boolean>{
+
+    @Override
+    public Boolean call() {
+        ThreadBootstrapper.terminateAllThread();
+
+        MainWindowController.switchWorkingStatus(false);
+        return true;
+    }
+}
+
 class ThreadBootstrapperTemplate implements Callable<Boolean>{
     private static int totalTaskNum;
     private static Integer currentTask = 0;
@@ -143,6 +168,10 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
     private final boolean renewFailedThreads;
     private final ExecutorService pool = Executors.newFixedThreadPool(ThreadBootstrapper.getThreadCount(), runnable -> new Thread(runnable, "Processing Thread"));
     public static final String initPassword = "123456";
+
+    Map<Future<Integer>, ProcessingThread> threadResultMap = new HashMap<>();
+    ArrayList<String> accountList = new ArrayList<>();
+    ArrayList<String> passwordList = new ArrayList<>();
 
     public ThreadBootstrapperTemplate(File accountFile, String accountString, File passwordFile, String passwordString, boolean isMale, boolean renewFailedThreads) {
         this.accountFile = accountFile;
@@ -157,9 +186,7 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
 
     @Override
     public Boolean call() {
-        Map<Future<Integer>, ProcessingThread> threadResultMap = new HashMap<>();
-        ArrayList<String> accountList = new ArrayList<>();
-        ArrayList<String> passwordList = new ArrayList<>();
+
         String universalPassword = initPassword;
 
         if(accountFile == null){
@@ -264,15 +291,14 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
                 MainEntrance.logDebug("Thread: " + resultValue + " Has Result Code: " + resultCode);
                 if(resultCode == 0){
                     resultIterator.remove();
-                } else {
-                    resultIterator.remove();
-                    threadResultMap.put(pool.submit(resultValue), resultValue);
                 }
             }
             MainEntrance.logDebug("All Results Outputted");
         } catch (InterruptedException e) {
-            MainEntrance.logWarning("The Batch Executions Are Interrupted");
+            MainEntrance.logWarning("The Execute Batch Executions Are Interrupted");
             MainEntrance.logDebug(e.getMessage());
+            clear();
+            return false;
         } catch (ExecutionException e) {
             MainEntrance.logError(e.getMessage());
         }
@@ -283,6 +309,13 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
             MainEntrance.logInfo("Renew Failed Task Is Turned On");
             if(threadResultMap.size() > 0) {
                 MainEntrance.logInfo("Retrying");
+                for(Iterator<Map.Entry<Future<Integer>, ProcessingThread>> resultIterator = threadResultMap.entrySet().iterator(); resultIterator.hasNext(); ) {
+                    Map.Entry<Future<Integer>, ProcessingThread> item = resultIterator.next();
+                    ProcessingThread resultValue = item.getValue();
+                    resultIterator.remove();
+                    threadResultMap.put(pool.submit(resultValue), resultValue);
+                }
+
                 try {
                     MainEntrance.logDebug("Got Renew Results");
                     for(Iterator<Map.Entry<Future<Integer>, ProcessingThread>> resultIterator = threadResultMap.entrySet().iterator(); resultIterator.hasNext(); ) {
@@ -301,17 +334,29 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
                     MainEntrance.logDebug("All Results Outputted");
                     MainEntrance.logWarning("Failed Results: " + threadResultMap.size());
                 } catch (InterruptedException e) {
-                    MainEntrance.logWarning("The Batch Executions Are Interrupted");
+                    MainEntrance.logWarning("The Renew Batch Executions Are Interrupted");
                     MainEntrance.logDebug(e.getMessage());
+                    clear();
+                    return false;
                 } catch (ExecutionException e) {
                     MainEntrance.logError(e.getMessage());
                 }
             }
         }
 
+        clear();
+
+        return true;
+    }
+
+    public ExecutorService getPool(){
+        return pool;
+    }
+
+    private void clear(){
         MainEntrance.logDebug("Ready To Shut Down All The Pool Of This Thread: " + this);
         pool.shutdownNow();
-        MainEntrance.logInfo("Terminate The Thread Pool");
+        MainEntrance.logDebug("Terminate The Thread Pool");
 
         MainEntrance.logDebug("Ready To Clear All The Threads And Memory Caches");
         threadResultMap.clear();
@@ -323,12 +368,6 @@ class ThreadBootstrapperTemplate implements Callable<Boolean>{
         MainEntrance.logDebug("Ready To Perform Garbage Collect");
         System.gc();
         MainEntrance.logDebug("Performed Garbage Collect");
-
-        return true;
-    }
-
-    public ExecutorService getPool(){
-        return pool;
     }
 
     public static void clearTaskCount(){
