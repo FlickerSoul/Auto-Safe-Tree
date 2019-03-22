@@ -31,8 +31,6 @@ public class SurveyMember  {
         this.noStartPoint = noStartPoint;
         this.abcStartPoint = abcStartPoint;
 
-        setAnswers();
-
         MainEntrance.logDebug(super.toString() + ": URL: "  + pageUrl + "; Male Answers: " + maleAnswerLine + "; Female Answers: " + femaleAnswerLine + "; First Button XPath: " + firstButtonXPath + "; Second Button XPath: " + secondButtonXPath);
     }
 
@@ -93,32 +91,46 @@ public class SurveyMember  {
         return abcStartPoint;
     }
 
-    private void setAnswers(){
-        try(BufferedReader maleAnswerBufferedReader = new BufferedReader(new FileReader(new File(maleAnswerPath)));
-            BufferedReader femaleAnswerBufferedReader = new BufferedReader(new FileReader(new File(femaleAnswerPath)))) {
-            String answer =  maleAnswerBufferedReader.readLine();
-            if(maleAnswerBufferedReader.readLine() != null)
-                throw new Exception("Malformat File");
-            if(answer != null && !answer.equals(""))
-                maleAnswerLine = answer;
+    public boolean setAnswers(){
+        maleAnswerLine = getAnswerLine(maleAnswerPath);
+        femaleAnswerLine = getAnswerLine(femaleAnswerPath);
 
-            answer = femaleAnswerBufferedReader.readLine();
-            if(femaleAnswerBufferedReader.readLine() != null)
-                throw new Exception("Malformat File");
-            if(answer != null && !answer.equals(""))
-                femaleAnswerLine = answer;
+        if(femaleAnswerLine.isBlank() && maleAnswerLine.isBlank()){
+            return false;
+        } else {
+            if(femaleAnswerLine.isBlank())
+                femaleAnswerLine = maleAnswerLine;
+            if(maleAnswerLine.isBlank())
+                maleAnswerLine = femaleAnswerLine;
 
-            return;
-        } catch (FileNotFoundException e) {
-            AlertBox.displayError("Error", "File Error: Answer File Is Not Found", "Please recheck the file path. \nGo Back And Edit This Configuration");
-        } catch (IOException e) {
-            AlertBox.displayError("Error", "IO Error: Cannot Read The Answer File", "Please ensure you have the access to the file. \nGo Back And Edit This Configuration");
-        } catch (Exception e) {
-            AlertBox.displayError("Error", "File Error: Answer File Should Has More Than One Line", "Please check the answer file and ensure it has only one line. \nGo Back And Edit This Configuration");
+            MainEntrance.logDebug("Male Answer: " + maleAnswerLine + "; Female Answer Is: " + femaleAnswerLine);
+            return true;
         }
+    }
 
-        maleAnswerLine = null;
-        femaleAnswerLine = null;
+    private String getAnswerLine(String path){
+        File answerFile = new File(path);
+
+        if(answerFile.canRead()) {
+            try (BufferedReader maleAnswerBufferedReader = new BufferedReader(new FileReader(answerFile))) {
+                String answer = maleAnswerBufferedReader.readLine();
+                if (maleAnswerBufferedReader.readLine() != null)
+                    throw new Exception("Malformat File");
+                if (answer != null && !answer.isBlank())
+                    return answer;
+
+            } catch (FileNotFoundException e) {
+                AlertBox.displayError("Error", "File Error: Answer File Is Not Found", "Please recheck the file path. \nGo Back And Edit This Configuration");
+            } catch (IOException e) {
+                AlertBox.displayError("Error", "IO Error: Cannot Read The Answer File", "Please ensure you have the access to the file. \nGo Back And Edit This Configuration");
+            } catch (Exception e) {
+                AlertBox.displayError("Error", "File Error: Answer File Should Has More Than One Line", "Please check the answer file and ensure it has only one line. \nGo Back And Edit This Configuration");
+            }
+
+            return "";
+        } else {
+            return  path;
+        }
     }
 
     public void updateInfo(String pageUrl, String maleAnswerPath, String femaleAnswerPath, String firstButtonXPath, String secondButtonXPath, String selectorXPath, String nextPageXPath, String clickInterval, String submitButtonXPath, int noStartPoint, int abcStartPoint) {
@@ -133,8 +145,6 @@ public class SurveyMember  {
         this.submitButtonXPath = submitButtonXPath;
         this.noStartPoint = noStartPoint;
         this.abcStartPoint = abcStartPoint;
-
-        setAnswers();
 
         MainEntrance.logDebug(super.toString() + ": URL: "  + pageUrl + "; Male Answers: " + maleAnswerLine + "; Female Answers: " + femaleAnswerLine + "; First Button XPath: " + firstButtonXPath + "; Second Button XPath: " + secondButtonXPath);
     }

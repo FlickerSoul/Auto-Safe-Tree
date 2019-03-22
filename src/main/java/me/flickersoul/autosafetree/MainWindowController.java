@@ -123,7 +123,9 @@ public class MainWindowController {
 
         renew_check_box.setSelected(true);
 
+        stage.setResizable(false);
         stage.initModality(Modality.APPLICATION_MODAL);
+        stage.setTitle("Editor");
 
         workingProperty.addListener((observable, oldValue, newValue) -> {
             if(newValue){
@@ -394,6 +396,7 @@ class ItemListView extends ListView<ItemTemplate> {
                     setOnMouseClicked(event -> {
                         if(event.getClickCount() == 2){
                             Stage stage = new Stage();
+                            stage.setResizable(false);
                             stage.initModality(Modality.APPLICATION_MODAL);
 
                             if(item instanceof TestItemTemplate){

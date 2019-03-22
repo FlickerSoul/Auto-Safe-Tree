@@ -6,7 +6,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.util.StringConverter;
+import org.w3c.dom.Document;
 
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.regex.Matcher;
@@ -130,6 +134,8 @@ public class SurveyInfoEditorController {
             if(checkIntegrity()) {
                 member.updateInfo(page_url_text_field.getText(), male_student_answers_path_text_field.getText(), female_student_answers_path_text_field.getText(), first_button_xpath_text_field.getText(), second_button_xpath_text_field.getText(), getSelectorXPath(), next_page_xpath_text_field.getText(), click_interval_text_field.getText(), submit_button_xpath_text_field.getText(), Integer.valueOf(no_starts_combo_box.getSelectionModel().getSelectedItem()), Integer.valueOf(abc_starts_combo_box.getSelectionModel().getSelectedItem()));
                 MainEntrance.logInfo("Update Info Successfully!");
+                submit_button.getScene().getWindow().hide();
+                MainEntrance.logDebug("Hide Window");
             }
         });
         MainEntrance.logDebug("Rewrite Submit Button Action");
@@ -152,6 +158,11 @@ public class SurveyInfoEditorController {
             MainEntrance.logDebug("The Test Serial Starts At " + noStartPoint + "; The Answer Starts At " + abcStartPoint);
 
             SurveyMember surveyMember = new SurveyMember(page_url_text_field.getText(), male_student_answers_path_text_field.getText(), female_student_answers_path_text_field.getText(), first_button_xpath_text_field.getText(), second_button_xpath_text_field.getText(), getSelectorXPath(), next_page_xpath_text_field.getText(), click_interval_text_field.getText(), submit_button_xpath_text_field.getText(), noStartPoint, abcStartPoint);
+            if(!surveyMember.setAnswers()){
+                AlertBox.displayError("Input Error", "Cannot Find Answers!", "The Program Cannot Find Any Answers; Please Check Your Input");
+                return;
+            }
+
             surveyMembers.put(url, surveyMember);
             itemTemplates.add(new SurveyItemTemplate(url, page_url_text_field.getText()));
 
@@ -160,6 +171,10 @@ public class SurveyInfoEditorController {
             submit_button.getScene().getWindow().hide();
             MainEntrance.logDebug("Close Window");
         }
+    }
+
+    public void save(){
+        AlertBox.displayError("Error", "This Function Is Temporarily Down", "The Stupid Author Don't Know How To Make It");
     }
 
     private String getSelectorXPath() {
@@ -174,7 +189,7 @@ public class SurveyInfoEditorController {
             return false;
         }
 
-        if(male_student_answers_path_text_field.getText().isBlank() || female_student_answers_path_text_field.getText().isBlank()){
+        if(male_student_answers_path_text_field.getText().isBlank() && female_student_answers_path_text_field.getText().isBlank()){
             AlertBox.displayError("Error", "Input Error: Answer File(s) Is(Are) Missing", "You have to input all the file required");
             return false;
         }

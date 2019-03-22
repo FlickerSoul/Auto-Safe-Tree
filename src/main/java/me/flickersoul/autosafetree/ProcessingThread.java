@@ -247,7 +247,7 @@ public class ProcessingThread implements Callable<Integer> {
         logInfoWithOwner("You Have " + (testSize + surveySize) + " Task(s) Remaining Incomplete! Test(s): " + testSize + "; Survey(s): " + surveySize);
 
         logInfoWithOwner("Start Finishing Task(s)...");
-        if (testAnchors.size() != 0) {
+        if (testSize != 0) {
             logInfoWithOwner("Start Finishing Test(s)");
             for (HtmlElement subAnchor : testAnchors) {
                 HtmlPage testPage = null;
