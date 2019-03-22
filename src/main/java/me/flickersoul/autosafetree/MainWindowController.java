@@ -19,7 +19,8 @@ import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import org.apache.log4j.Level;
 
-import java.awt.Desktop;
+import java.awt.*;
+import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
@@ -252,8 +253,13 @@ public class MainWindowController {
     public void report(){
         MainEntrance.logInfo("Opening Log File Folder; Composing Report Email...");
 
+        String url = ("mailto:i@flicker-soul.me?subject=Bug%20Report&body=%0D%0A%0D%0A%0D%0A" + "Please Detail The Problems AND Attach Log Files (Which Have Been Opened In Your System's File Explore) Here. Thank you! %0D%0A(请详细说明问题，并且请附上Log文件，文件夹已为您打开. 谢谢!）" + "%0D%0A%0D%0A" + "Application Version: " + System.getProperty("app.version") + "%0D%0AJava Version: " + System.getProperty("java.version") + "%0D%0ASystem Os Version: "  + System.getProperty("os.name") + "%0D%0ASystem Arch: " + System.getProperty("os.arch") + "%0D%0ASystem Version: " + System.getProperty("os.version")).replaceAll(" ", "%20");
+
+        Toolkit.getDefaultToolkit().getSystemClipboard().setContents(new StringSelection(url), null);
+        MainEntrance.logInfo("Copied Email Link To Clipboard; Please Paste It To Your Browser!");
+
         try {
-            URI mailContent = new URI(("mailto:i@flicker-soul.me?subject=Bug%20Report&body=%0D%0A%0D%0A%0D%0A" + "Please Detail The Problems AND Attach Log Files (Which Have Been Opened In Your System's File Explore) Here. Thank you! %0D%0A(请详细说明问题，并且请附上Log文件，文件夹已为您打开. 谢谢!）" + "%0D%0A%0D%0A" + "Application Version: " + System.getProperty("app.version") + "%0D%0AJava Version: " + System.getProperty("java.version") + "%0D%0ASystem Os Version: "  + System.getProperty("os.name") + "%0D%0ASystem Arch: " + System.getProperty("os.arch") + "%0D%0ASystem Version: " + System.getProperty("os.version")).replaceAll(" ", "%20"));
+            URI mailContent = new URI(url);
             Desktop.getDesktop().mail(mailContent);
             MainEntrance.logDebug("Mail Content:" + mailContent);
 
